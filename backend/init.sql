@@ -1,0 +1,2 @@
+-- Optional database initialization script for PostgreSQL container.
+-- The database and user are already created by docker-compose environment variables.
