@@ -162,7 +162,7 @@ Example:
 
 ## Entity-relationship diagram
 
-Below matches **Flyway migrations V1–V7** 
+Below matches **Flyway migrations V1–V7**. Gitea’s Mermaid preview shrinks huge diagrams, so relationships are split into three readable charts; column details are in the tables underneath.
 
 **Cardinality / modality**
 
@@ -173,132 +173,119 @@ Below matches **Flyway migrations V1–V7**
 | `(0,N)` | Zero or many — optional side |
 | UK | Unique key |
 
+### Auth & security
+
 ```mermaid
 erDiagram
-    USERS ||--o{ REFRESH_TOKENS : "has"
-    USERS ||--o{ PASSWORD_RESET_TOKENS : "has"
-    USERS ||--o{ TWO_FACTOR_BACKUP_CODES : "has"
-    USERS ||--o{ CART_ITEMS : "owns_planned"
-    USERS ||--o{ ORDERS : "places_planned"
-    CATEGORIES ||--|{ PRODUCTS : "contains"
-    PRODUCTS ||--|{ PRODUCT_IMAGES : "has"
-    PRODUCTS ||--o{ CART_ITEMS : "in_planned"
-    PRODUCTS ||--o{ ORDER_ITEMS : "in_planned"
-    ORDERS ||--|{ ORDER_ITEMS : "contains_planned"
-
+    USERS ||--o{ REFRESH_TOKENS : has
+    USERS ||--o{ PASSWORD_RESET_TOKENS : has
+    USERS ||--o{ TWO_FACTOR_BACKUP_CODES : has
     USERS {
         bigint id PK
-        varchar email UK "NOT NULL"
-        varchar password "BCrypt NOT NULL"
-        varchar username "NOT NULL"
-        varchar provider "nullable OAuth"
-        boolean enabled "default true"
-        boolean two_factor_enabled "default false"
-        varchar two_factor_secret "nullable"
-        timestamp last_login_at "nullable"
-        int failed_login_attempts
-        timestamp account_locked_until "nullable"
-        timestamp created_at
-        timestamp updated_at
+        varchar email UK
     }
-
     REFRESH_TOKENS {
         bigint id PK
-        bigint user_id FK "NOT NULL"
-        varchar token UK
-        timestamp expires_at
-        boolean revoked
-        boolean used
-        timestamp created_at
+        bigint user_id FK
     }
-
     PASSWORD_RESET_TOKENS {
         bigint id PK
-        bigint user_id FK "NOT NULL"
-        varchar token UK
-        timestamp expires_at
-        boolean used
-        timestamp created_at
+        bigint user_id FK
     }
-
+    TWO_FACTOR_BACKUP_CODES {
+        bigint id PK
+        bigint user_id FK
+    }
     REVOKED_ACCESS_TOKENS {
         bigint id PK
         varchar jti UK
-        timestamp expires_at
-        timestamp revoked_at
-    }
-
-    TWO_FACTOR_BACKUP_CODES {
-        bigint id PK
-        bigint user_id FK "NOT NULL"
-        varchar code_hash
-        boolean used
-        timestamp created_at
-    }
-
-    CATEGORIES {
-        bigint id PK
-        varchar name
-        varchar slug UK
-        text description
-        timestamp created_at
-    }
-
-    PRODUCTS {
-        bigint id PK
-        bigint category_id FK "NOT NULL"
-        varchar name
-        text description
-        decimal price
-        int stock_quantity
-        varchar brand
-        decimal rating
-        decimal weight_kg
-        decimal weight_lb
-        decimal length_cm
-        decimal length_in
-        decimal width_cm
-        decimal width_in
-        decimal height_cm
-        decimal height_in
-        tsvector search_vector
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    PRODUCT_IMAGES {
-        bigint id PK
-        bigint product_id FK "NOT NULL"
-        varchar file_name
-        varchar url_path
-        boolean is_primary
-        int sort_order
-        timestamp created_at
-    }
-
-    CART_ITEMS {
-        bigint id PK "planned"
-        bigint user_id FK
-        bigint product_id FK
-        int quantity
-    }
-
-    ORDERS {
-        bigint id PK "planned"
-        bigint user_id FK
-        varchar status
-        decimal total_amount
-        timestamp created_at
-    }
-
-    ORDER_ITEMS {
-        bigint id PK "planned"
-        bigint order_id FK
-        bigint product_id FK
-        int quantity
-        decimal price_at_purchase
     }
 ```
+
+`REVOKED_ACCESS_TOKENS` is standalone (no FK to `USERS`); rows are keyed by access-token `jti`.
+
+### Catalog
+
+```mermaid
+erDiagram
+    CATEGORIES ||--|{ PRODUCTS : contains
+    PRODUCTS ||--|{ PRODUCT_IMAGES : has
+    CATEGORIES {
+        bigint id PK
+        varchar slug UK
+    }
+    PRODUCTS {
+        bigint id PK
+        bigint category_id FK
+    }
+    PRODUCT_IMAGES {
+        bigint id PK
+        bigint product_id FK
+    }
+```
+
+### Planned checkout (not implemented yet)
+
+```mermaid
+erDiagram
+    USERS ||--o{ CART_ITEMS : owns
+    USERS ||--o{ ORDERS : places
+    PRODUCTS ||--o{ CART_ITEMS : in
+    PRODUCTS ||--o{ ORDER_ITEMS : in
+    ORDERS ||--|{ ORDER_ITEMS : contains
+    USERS {
+        bigint id PK
+    }
+    PRODUCTS {
+        bigint id PK
+    }
+    CART_ITEMS {
+        bigint id PK
+    }
+    ORDERS {
+        bigint id PK
+    }
+    ORDER_ITEMS {
+        bigint id PK
+    }
+```
+
+Cart is **client-side only** today; these tables are shown for planned checkout work.
+
+### Entity columns
+
+**USERS**
+
+| Column | Notes |
+|--------|--------|
+| `id` | PK |
+| `email` | UK, NOT NULL |
+| `password` | BCrypt, NOT NULL |
+| `username` | NOT NULL |
+| `provider` | nullable — OAuth provider |
+| `enabled` | default true |
+| `two_factor_enabled` | default false |
+| `two_factor_secret` | nullable |
+| `last_login_at` | nullable |
+| `failed_login_attempts` | |
+| `account_locked_until` | nullable |
+| `created_at`, `updated_at` | |
+
+**REFRESH_TOKENS** — `user_id` FK, `token` UK, `expires_at`, `revoked`, `used`, `created_at`
+
+**PASSWORD_RESET_TOKENS** — `user_id` FK, `token` UK, `expires_at`, `used`, `created_at`
+
+**REVOKED_ACCESS_TOKENS** — `jti` UK, `expires_at`, `revoked_at`
+
+**TWO_FACTOR_BACKUP_CODES** — `user_id` FK, `code_hash`, `used`, `created_at`
+
+**CATEGORIES** — `name`, `slug` UK, `description`, `created_at`
+
+**PRODUCTS** — `category_id` FK, `name`, `description`, `price`, `stock_quantity`, `brand`, `rating`, dimensions/weight fields, `search_vector`, timestamps
+
+**PRODUCT_IMAGES** — `product_id` FK, `file_name`, `url_path`, `is_primary`, `sort_order`, `created_at`
+
+**CART_ITEMS / ORDERS / ORDER_ITEMS** — planned; see migrations when checkout is added
 
 **Relationship summary**
 

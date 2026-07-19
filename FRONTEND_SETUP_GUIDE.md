@@ -209,10 +209,7 @@ export RECAPTCHA_SECRET_KEY="your_secret_key_from_step_1"
 export GOOGLE_CLIENT_ID="your_google_client_id"
 export GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
-# Facebook OAuth (optional, for now)
-export FACEBOOK_APP_ID="your_facebook_app_id"
-export FACEBOOK_APP_SECRET="your_facebook_app_secret"
-```
+
 
 Or set in `.env` file (if you're using a tool to load it).
 
@@ -359,15 +356,3 @@ User Logout:
 ```
 
 ---
-
-## Next Steps
-
-- [ ] Install `@react-google-recaptcha-v3` package
-- [ ] Get reCAPTCHA Site Key from Google
-- [ ] Add GoogleReCaptchaProvider to main.tsx
-- [ ] Update AuthPage.tsx to use executeRecaptcha
-- [ ] Set backend environment variables
-- [ ] Test registration with CAPTCHA
-- [ ] Test login and verify memory-only tokens
-- [ ] Test page reload and refresh token
-- [ ] (Later) Add Google/Facebook OAuth buttons if needed
