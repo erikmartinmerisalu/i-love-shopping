@@ -8,8 +8,6 @@ import { useAuth } from "../context/AuthContext";
 import { isRecaptchaConfigured } from "../features/auth/oauthConfig";
 import {
   type AuthFieldErrors,
-  isLoginFormValid,
-  isRegisterFormValid,
   validateLoginFields,
   validateRegisterFields,
 } from "../utils/authValidation";
@@ -208,13 +206,6 @@ const AuthPage = () => {
     navigate("/products");
   };
 
-  const loginValid = isLoginFormValid(formState.email, formState.password);
-  const registerValid = isRegisterFormValid(
-    formState.email,
-    formState.password,
-    formState.confirmPassword
-  );
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10">
@@ -368,6 +359,7 @@ const AuthPage = () => {
                         value={formState.email}
                         onChange={handleChange}
                         type="email"
+                        autoComplete="email"
                         placeholder="Email address"
                         className={`w-full rounded-3xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition focus:ring-2 ${
                           errors.email
@@ -384,6 +376,7 @@ const AuthPage = () => {
                         value={formState.password}
                         onChange={handleChange}
                         type="password"
+                        autoComplete={mode === "register" ? "new-password" : "current-password"}
                         placeholder="Password"
                         className={`w-full rounded-3xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition focus:ring-2 ${
                           errors.password
@@ -406,6 +399,7 @@ const AuthPage = () => {
                           value={formState.confirmPassword}
                           onChange={handleChange}
                           type="password"
+                          autoComplete="new-password"
                           placeholder="Confirm password"
                           className={`w-full rounded-3xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition focus:ring-2 ${
                             errors.confirmPassword
@@ -441,12 +435,7 @@ const AuthPage = () => {
                     )}
 
                     <button
-                      disabled={
-                        isSubmitting ||
-                        (mode === "login"
-                          ? !loginValid
-                          : !registerValid || (isRecaptchaConfigured && !captchaToken))
-                      }
+                      disabled={isSubmitting}
                       className="mt-2 rounded-3xl bg-sky-400 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-sky-500/10 transition hover:bg-sky-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {isSubmitting

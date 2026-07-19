@@ -49,8 +49,8 @@ export const validateLoginFields = (email: string, password: string): AuthFieldE
     errors.email = "Email must be at least 8 characters and contain @ and .";
   }
 
-  if (!isStrongPassword(password)) {
-    errors.password = getPasswordError(password) ?? "Password does not meet complexity requirements";
+  if (!password.trim()) {
+    errors.password = "Password is required";
   }
 
   return errors;
@@ -61,14 +61,20 @@ export const validateRegisterFields = (
   password: string,
   confirmPassword: string
 ): AuthFieldErrors => {
-  const errors = validateLoginFields(email, password);
+  const errors: AuthFieldErrors = {};
 
-  const confirmError = getPasswordError(confirmPassword);
-  if (confirmError) {
-    errors.confirmPassword = confirmError;
+  if (!isValidEmail(email)) {
+    errors.email = "Email must be at least 8 characters and contain @ and .";
   }
 
-  if (password && confirmPassword && password !== confirmPassword) {
+  const passwordError = getPasswordError(password);
+  if (passwordError) {
+    errors.password = passwordError;
+  }
+
+  if (!confirmPassword.trim()) {
+    errors.confirmPassword = "Please confirm your password";
+  } else if (password !== confirmPassword) {
     errors.confirmPassword = "Passwords do not match";
   }
 
