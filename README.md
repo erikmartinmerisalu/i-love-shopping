@@ -23,7 +23,6 @@ B2C lighting shop built for a coursework/viva project. Customers browse a produc
 | Automated backend tests | 35 (`mvn test`) |
 | Checkout / orders / payments | Not started |
 
-Facebook OAuth exists in the backend validator but is **not** wired in the current UI — only Google is shown on the login page.
 
 ---
 
