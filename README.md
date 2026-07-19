@@ -109,7 +109,7 @@ Testing notes: [TESTING_STRATEGY.md](TESTING_STRATEGY.md)
 
 ---
 
-## Architecture (short)
+## Architecture 
 
 **Why this shape**
 
@@ -163,7 +163,7 @@ Example:
 
 ## Entity-relationship diagram
 
-Below matches **Flyway migrations V1–V7** (what is actually in the database today). Cart and order tables are shown as **planned** — they are not migrated yet.
+Below matches **Flyway migrations V1–V7** 
 
 **Cardinality / modality**
 
@@ -314,48 +314,11 @@ erDiagram
 
 ---
 
-## Requirement checklist (assessor view)
 
-| Requirement | Met? | Notes |
-|-------------|------|-------|
-| README: overview, ERD, setup, usage | Yes | This file |
-| B2C model | Yes | Direct-to-consumer catalog |
-| Email + OAuth auth | Yes | Google in UI; Facebook backend only |
-| CAPTCHA on registration | Yes | Needs keys in production |
-| Explain JWT (header, payload, signature) | Yes | Section above + `JwtUtil` |
-| Access token in memory | Yes | `AuthContext.tsx` |
-| Refresh rotation, single-use | Yes | `AuthService.refreshToken` + integration test |
-| Token revocation | Yes | Refresh flags + access JTI blacklist |
-| Password reset via email | Partial | Works; SMTP optional — dev logs link |
-| Optional 2FA | Yes | Profile → Two-factor auth |
-| Client + server validation | Yes | `authValidation.ts` + Bean Validation |
-| DB scalability explanation | Yes | Indexes, pooling section |
-| ACID explanation | Yes | Section above |
-| ERD with PK/FK/cardinality | Yes | Diagram above matches V1–V7 |
-| Search + DB design | Yes | tsvector + ILIKE path |
-| Full product fields | Yes | Metric + imperial dimensions |
-| Categories, facets, sort | Yes | API + `ProductsPage` |
-| Product images | Yes | Upload + `/api/uploads/**` |
-| Testing strategy | Yes | `TESTING_STRATEGY.md` |
-| Unit / integration / security tests | Yes | 35 tests |
-| Architecture + scalability | Yes | This README |
-| Docker-only host prerequisite | Yes | Root `docker-compose.yml` |
-
-**Honest gaps for viva:** no checkout/orders; search query uses ILIKE not `@@` tsquery; OAuth/CAPTCHA/SMTP need env vars for a full live demo.
-
----
 
 ## Other docs
 
 | File | Purpose |
 |------|---------|
-| [checking checklist.md](checking%20checklist.md) | Detailed requirement mapping |
-| [docs/VIVA_PREP.md](docs/VIVA_PREP.md) | Demo script and talking points |
-| [TESTING_STRATEGY.md](TESTING_STRATEGY.md) | How tests are organised |
-| [docs/ACCESS_TOKEN_REVOCATION.md](docs/ACCESS_TOKEN_REVOCATION.md) | JTI blacklist detail |
 | [example.env](example.env) | OAuth, reCAPTCHA, SMTP template |
 | [docs/RECAPTCHA_SETUP.md](docs/RECAPTCHA_SETUP.md) | reCAPTCHA keys, localhost, and Render |
-
-## License
-
-Academic / portfolio use.
