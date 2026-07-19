@@ -1,0 +1,10 @@
+com/lampify/controller/ProductCatalogSecurityTest.class
+com/lampify/controller/AuthSecurityTest.class
+com/lampify/controller/AuthIntegrationTest$SessionState.class
+com/lampify/controller/AuthIntegrationTest.class
+com/lampify/service/AuthServiceTest.class
+com/lampify/service/ProductServiceTest.class
+com/lampify/controller/AuthControllerTest.class
+com/lampify/controller/OAuthEndpointSecurityTest.class
+com/lampify/controller/ProductCatalogIntegrationTest.class
+com/lampify/security/RateLimitingFilterTest.class

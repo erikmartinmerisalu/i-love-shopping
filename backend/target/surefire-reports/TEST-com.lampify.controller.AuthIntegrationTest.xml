@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.lampify.controller.AuthIntegrationTest" time="5.482" tests="3" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/emmerisalu/projects/backend/target/test-classes:/home/emmerisalu/projects/backend/target/classes:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-web/3.3.0/spring-boot-starter-web-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter/3.3.0/spring-boot-starter-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot/3.3.0/spring-boot-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-autoconfigure/3.3.0/spring-boot-autoconfigure-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-logging/3.3.0/spring-boot-starter-logging-3.3.0.jar:/home/emmerisalu/.m2/repository/ch/qos/logback/logback-classic/1.5.6/logback-classic-1.5.6.jar:/home/emmerisalu/.m2/repository/ch/qos/logback/logback-core/1.5.6/logback-core-1.5.6.jar:/home/emmerisalu/.m2/repository/org/apache/logging/log4j/log4j-to-slf4j/2.23.1/log4j-to-slf4j-2.23.1.jar:/home/emmerisalu/.m2/repository/org/apache/logging/log4j/log4j-api/2.23.1/log4j-api-2.23.1.jar:/home/emmerisalu/.m2/repository/org/slf4j/jul-to-slf4j/2.0.13/jul-to-slf4j-2.0.13.jar:/home/emmerisalu/.m2/repository/jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1.jar:/home/emmerisalu/.m2/repository/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-json/3.3.0/spring-boot-starter-json-3.3.0.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.17.1/jackson-datatype-jdk8-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.17.1/jackson-datatype-jsr310-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/module/jackson-module-parameter-names/2.17.1/jackson-module-parameter-names-2.17.1.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-tomcat/3.3.0/spring-boot-starter-tomcat-3.3.0.jar:/home/emmerisalu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/10.1.24/tomcat-embed-core-10.1.24.jar:/home/emmerisalu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-websocket/10.1.24/tomcat-embed-websocket-10.1.24.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-web/6.1.8/spring-web-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-beans/6.1.8/spring-beans-6.1.8.jar:/home/emmerisalu/.m2/repository/io/micrometer/micrometer-observation/1.13.0/micrometer-observation-1.13.0.jar:/home/emmerisalu/.m2/repository/io/micrometer/micrometer-commons/1.13.0/micrometer-commons-1.13.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-webmvc/6.1.8/spring-webmvc-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-context/6.1.8/spring-context-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-expression/6.1.8/spring-expression-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-data-jpa/3.3.0/spring-boot-starter-data-jpa-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-aop/3.3.0/spring-boot-starter-aop-3.3.0.jar:/home/emmerisalu/.m2/repository/org/aspectj/aspectjweaver/1.9.22/aspectjweaver-1.9.22.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-jdbc/3.3.0/spring-boot-starter-jdbc-3.3.0.jar:/home/emmerisalu/.m2/repository/com/zaxxer/HikariCP/5.1.0/HikariCP-5.1.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-jdbc/6.1.8/spring-jdbc-6.1.8.jar:/home/emmerisalu/.m2/repository/org/hibernate/orm/hibernate-core/6.5.2.Final/hibernate-core-6.5.2.Final.jar:/home/emmerisalu/.m2/repository/jakarta/persistence/jakarta.persistence-api/3.1.0/jakarta.persistence-api-3.1.0.jar:/home/emmerisalu/.m2/repository/jakarta/transaction/jakarta.transaction-api/2.0.1/jakarta.transaction-api-2.0.1.jar:/home/emmerisalu/.m2/repository/org/jboss/logging/jboss-logging/3.5.3.Final/jboss-logging-3.5.3.Final.jar:/home/emmerisalu/.m2/repository/org/hibernate/common/hibernate-commons-annotations/6.0.6.Final/hibernate-commons-annotations-6.0.6.Final.jar:/home/emmerisalu/.m2/repository/io/smallrye/jandex/3.1.2/jandex-3.1.2.jar:/home/emmerisalu/.m2/repository/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar:/home/emmerisalu/.m2/repository/net/bytebuddy/byte-buddy/1.14.16/byte-buddy-1.14.16.jar:/home/emmerisalu/.m2/repository/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.jar:/home/emmerisalu/.m2/repository/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.jar:/home/emmerisalu/.m2/repository/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.jar:/home/emmerisalu/.m2/repository/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.jar:/home/emmerisalu/.m2/repository/jakarta/inject/jakarta.inject-api/2.0.1/jakarta.inject-api-2.0.1.jar:/home/emmerisalu/.m2/repository/org/antlr/antlr4-runtime/4.13.0/antlr4-runtime-4.13.0.jar:/home/emmerisalu/.m2/repository/org/springframework/data/spring-data-jpa/3.3.0/spring-data-jpa-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/data/spring-data-commons/3.3.0/spring-data-commons-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-orm/6.1.8/spring-orm-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-tx/6.1.8/spring-tx-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-aspects/6.1.8/spring-aspects-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-validation/3.3.0/spring-boot-starter-validation-3.3.0.jar:/home/emmerisalu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-el/10.1.24/tomcat-embed-el-10.1.24.jar:/home/emmerisalu/.m2/repository/org/hibernate/validator/hibernate-validator/8.0.1.Final/hibernate-validator-8.0.1.Final.jar:/home/emmerisalu/.m2/repository/jakarta/validation/jakarta.validation-api/3.0.2/jakarta.validation-api-3.0.2.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-security/3.3.0/spring-boot-starter-security-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-aop/6.1.8/spring-aop-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-config/6.3.0/spring-security-config-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-web/6.3.0/spring-security-web-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-mail/3.3.0/spring-boot-starter-mail-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-context-support/6.1.8/spring-context-support-6.1.8.jar:/home/emmerisalu/.m2/repository/org/eclipse/angus/jakarta.mail/2.0.3/jakarta.mail-2.0.3.jar:/home/emmerisalu/.m2/repository/jakarta/activation/jakarta.activation-api/2.1.3/jakarta.activation-api-2.1.3.jar:/home/emmerisalu/.m2/repository/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.jar:/home/emmerisalu/.m2/repository/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar:/home/emmerisalu/.m2/repository/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0.jar:/home/emmerisalu/.m2/repository/org/flywaydb/flyway-core/10.11.0/flyway-core-10.11.0.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.17.1/jackson-dataformat-toml-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.17.1/jackson-core-2.17.1.jar:/home/emmerisalu/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:/home/emmerisalu/.m2/repository/org/flywaydb/flyway-database-postgresql/10.11.0/flyway-database-postgresql-10.11.0.jar:/home/emmerisalu/.m2/repository/io/jsonwebtoken/jjwt-api/0.11.5/jjwt-api-0.11.5.jar:/home/emmerisalu/.m2/repository/io/jsonwebtoken/jjwt-impl/0.11.5/jjwt-impl-0.11.5.jar:/home/emmerisalu/.m2/repository/io/jsonwebtoken/jjwt-jackson/0.11.5/jjwt-jackson-0.11.5.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.17.1/jackson-databind-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.17.1/jackson-annotations-2.17.1.jar:/home/emmerisalu/.m2/repository/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-crypto/6.3.0/spring-security-crypto-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-webflux/3.3.0/spring-boot-starter-webflux-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-reactor-netty/3.3.0/spring-boot-starter-reactor-netty-3.3.0.jar:/home/emmerisalu/.m2/repository/io/projectreactor/netty/reactor-netty-http/1.1.19/reactor-netty-http-1.1.19.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-http/4.1.110.Final/netty-codec-http-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-common/4.1.110.Final/netty-common-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-buffer/4.1.110.Final/netty-buffer-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport/4.1.110.Final/netty-transport-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec/4.1.110.Final/netty-codec-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-handler/4.1.110.Final/netty-handler-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-http2/4.1.110.Final/netty-codec-http2-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver-dns/4.1.110.Final/netty-resolver-dns-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver/4.1.110.Final/netty-resolver-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-dns/4.1.110.Final/netty-codec-dns-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver-dns-native-macos/4.1.110.Final/netty-resolver-dns-native-macos-4.1.110.Final-osx-x86_64.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver-dns-classes-macos/4.1.110.Final/netty-resolver-dns-classes-macos-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport-native-epoll/4.1.110.Final/netty-transport-native-epoll-4.1.110.Final-linux-x86_64.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport-native-unix-common/4.1.110.Final/netty-transport-native-unix-common-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport-classes-epoll/4.1.110.Final/netty-transport-classes-epoll-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/projectreactor/netty/reactor-netty-core/1.1.19/reactor-netty-core-1.1.19.jar:/home/emmerisalu/.m2/repository/io/netty/netty-handler-proxy/4.1.110.Final/netty-handler-proxy-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-socks/4.1.110.Final/netty-codec-socks-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-webflux/6.1.8/spring-webflux-6.1.8.jar:/home/emmerisalu/.m2/repository/io/projectreactor/reactor-core/3.6.6/reactor-core-3.6.6.jar:/home/emmerisalu/.m2/repository/org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar:/home/emmerisalu/.m2/repository/com/google/auth/google-auth-library-oauth2-http/1.11.0/google-auth-library-oauth2-http-1.11.0.jar:/home/emmerisalu/.m2/repository/com/google/auto/value/auto-value-annotations/1.9/auto-value-annotations-1.9.jar:/home/emmerisalu/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/home/emmerisalu/.m2/repository/com/google/auth/google-auth-library-credentials/1.11.0/google-auth-library-credentials-1.11.0.jar:/home/emmerisalu/.m2/repository/com/google/http-client/google-http-client/1.42.2/google-http-client-1.42.2.jar:/home/emmerisalu/.m2/repository/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar:/home/emmerisalu/.m2/repository/io/opencensus/opencensus-api/0.31.1/opencensus-api-0.31.1.jar:/home/emmerisalu/.m2/repository/io/grpc/grpc-context/1.27.2/grpc-context-1.27.2.jar:/home/emmerisalu/.m2/repository/io/opencensus/opencensus-contrib-http-util/0.31.1/opencensus-contrib-http-util-0.31.1.jar:/home/emmerisalu/.m2/repository/com/google/http-client/google-http-client-gson/1.42.2/google-http-client-gson-1.42.2.jar:/home/emmerisalu/.m2/repository/com/google/guava/guava/31.0.1-android/guava-31.0.1-android.jar:/home/emmerisalu/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar:/home/emmerisalu/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/home/emmerisalu/.m2/repository/org/checkerframework/checker-compat-qual/2.5.5/checker-compat-qual-2.5.5.jar:/home/emmerisalu/.m2/repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.jar:/home/emmerisalu/.m2/repository/com/google/api-client/google-api-client/2.2.0/google-api-client-2.2.0.jar:/home/emmerisalu/.m2/repository/commons-codec/commons-codec/1.16.1/commons-codec-1.16.1.jar:/home/emmerisalu/.m2/repository/com/google/oauth-client/google-oauth-client/1.34.1/google-oauth-client-1.34.1.jar:/home/emmerisalu/.m2/repository/com/google/http-client/google-http-client-apache-v2/1.42.3/google-http-client-apache-v2-1.42.3.jar:/home/emmerisalu/.m2/repository/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar:/home/emmerisalu/.m2/repository/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar:/home/emmerisalu/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/home/emmerisalu/.m2/repository/com/google/api-client/google-api-client-gson/2.2.0/google-api-client-gson-2.2.0.jar:/home/emmerisalu/.m2/repository/com/restfb/restfb/2023.12.0/restfb-2023.12.0.jar:/home/emmerisalu/.m2/repository/dev/samstevens/totp/totp/1.7.1/totp-1.7.1.jar:/home/emmerisalu/.m2/repository/com/google/zxing/core/3.4.0/core-3.4.0.jar:/home/emmerisalu/.m2/repository/com/google/zxing/javase/3.4.0/javase-3.4.0.jar:/home/emmerisalu/.m2/repository/com/beust/jcommander/1.72/jcommander-1.72.jar:/home/emmerisalu/.m2/repository/com/github/jai-imageio/jai-imageio-core/1.4.0/jai-imageio-core-1.4.0.jar:/home/emmerisalu/.m2/repository/com/h2database/h2/2.2.224/h2-2.2.224.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-test/3.3.0/spring-boot-starter-test-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-test/3.3.0/spring-boot-test-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/3.3.0/spring-boot-test-autoconfigure-3.3.0.jar:/home/emmerisalu/.m2/repository/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar:/home/emmerisalu/.m2/repository/jakarta/xml/bind/jakarta.xml.bind-api/4.0.2/jakarta.xml.bind-api-4.0.2.jar:/home/emmerisalu/.m2/repository/net/minidev/json-smart/2.5.1/json-smart-2.5.1.jar:/home/emmerisalu/.m2/repository/net/minidev/accessors-smart/2.5.1/accessors-smart-2.5.1.jar:/home/emmerisalu/.m2/repository/org/ow2/asm/asm/9.6/asm-9.6.jar:/home/emmerisalu/.m2/repository/org/assertj/assertj-core/3.25.3/assertj-core-3.25.3.jar:/home/emmerisalu/.m2/repository/org/awaitility/awaitility/4.2.1/awaitility-4.2.1.jar:/home/emmerisalu/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/home/emmerisalu/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/emmerisalu/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/home/emmerisalu/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/home/emmerisalu/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/home/emmerisalu/.m2/repository/org/mockito/mockito-core/5.11.0/mockito-core-5.11.0.jar:/home/emmerisalu/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.16/byte-buddy-agent-1.14.16.jar:/home/emmerisalu/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:/home/emmerisalu/.m2/repository/org/mockito/mockito-junit-jupiter/5.11.0/mockito-junit-jupiter-5.11.0.jar:/home/emmerisalu/.m2/repository/org/skyscreamer/jsonassert/1.5.1/jsonassert-1.5.1.jar:/home/emmerisalu/.m2/repository/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-core/6.1.8/spring-core-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-jcl/6.1.8/spring-jcl-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-test/6.1.8/spring-test-6.1.8.jar:/home/emmerisalu/.m2/repository/org/xmlunit/xmlunit-core/2.9.1/xmlunit-core-2.9.1.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-test/6.3.0/spring-security-test-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-core/6.3.0/spring-security-core-6.3.0.jar:/home/emmerisalu/.m2/repository/org/testcontainers/testcontainers/1.19.3/testcontainers-1.19.3.jar:/home/emmerisalu/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar:/home/emmerisalu/.m2/repository/org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2.jar:/home/emmerisalu/.m2/repository/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar:/home/emmerisalu/.m2/repository/org/apache/commons/commons-compress/1.24.0/commons-compress-1.24.0.jar:/home/emmerisalu/.m2/repository/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar:/home/emmerisalu/.m2/repository/org/jetbrains/annotations/17.0.0/annotations-17.0.0.jar:/home/emmerisalu/.m2/repository/com/github/docker-java/docker-java-api/3.3.4/docker-java-api-3.3.4.jar:/home/emmerisalu/.m2/repository/com/github/docker-java/docker-java-transport-zerodep/3.3.4/docker-java-transport-zerodep-3.3.4.jar:/home/emmerisalu/.m2/repository/com/github/docker-java/docker-java-transport/3.3.4/docker-java-transport-3.3.4.jar:/home/emmerisalu/.m2/repository/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar:/home/emmerisalu/.m2/repository/org/testcontainers/postgresql/1.19.3/postgresql-1.19.3.jar:/home/emmerisalu/.m2/repository/org/testcontainers/jdbc/1.19.3/jdbc-1.19.3.jar:/home/emmerisalu/.m2/repository/org/testcontainers/database-commons/1.19.8/database-commons-1.19.8.jar:"/>
+    <property name="java.vm.vendor" value="Ubuntu"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://ubuntu.com/"/>
+    <property name="user.timezone" value="Europe/Tallinn"/>
+    <property name="org.jboss.logging.provider" value="slf4j"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/java-21-openjdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/emmerisalu/projects/backend/target/surefire/surefirebooter-20260719235333555_3.jar /home/emmerisalu/projects/backend/target/surefire 2026-07-19T23-53-33_489-jvmRun1 surefire-20260719235333555_1tmp surefire_0-20260719235333555_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/home/emmerisalu/projects/backend/target/test-classes:/home/emmerisalu/projects/backend/target/classes:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-web/3.3.0/spring-boot-starter-web-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter/3.3.0/spring-boot-starter-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot/3.3.0/spring-boot-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-autoconfigure/3.3.0/spring-boot-autoconfigure-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-logging/3.3.0/spring-boot-starter-logging-3.3.0.jar:/home/emmerisalu/.m2/repository/ch/qos/logback/logback-classic/1.5.6/logback-classic-1.5.6.jar:/home/emmerisalu/.m2/repository/ch/qos/logback/logback-core/1.5.6/logback-core-1.5.6.jar:/home/emmerisalu/.m2/repository/org/apache/logging/log4j/log4j-to-slf4j/2.23.1/log4j-to-slf4j-2.23.1.jar:/home/emmerisalu/.m2/repository/org/apache/logging/log4j/log4j-api/2.23.1/log4j-api-2.23.1.jar:/home/emmerisalu/.m2/repository/org/slf4j/jul-to-slf4j/2.0.13/jul-to-slf4j-2.0.13.jar:/home/emmerisalu/.m2/repository/jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1.jar:/home/emmerisalu/.m2/repository/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-json/3.3.0/spring-boot-starter-json-3.3.0.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.17.1/jackson-datatype-jdk8-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.17.1/jackson-datatype-jsr310-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/module/jackson-module-parameter-names/2.17.1/jackson-module-parameter-names-2.17.1.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-tomcat/3.3.0/spring-boot-starter-tomcat-3.3.0.jar:/home/emmerisalu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/10.1.24/tomcat-embed-core-10.1.24.jar:/home/emmerisalu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-websocket/10.1.24/tomcat-embed-websocket-10.1.24.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-web/6.1.8/spring-web-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-beans/6.1.8/spring-beans-6.1.8.jar:/home/emmerisalu/.m2/repository/io/micrometer/micrometer-observation/1.13.0/micrometer-observation-1.13.0.jar:/home/emmerisalu/.m2/repository/io/micrometer/micrometer-commons/1.13.0/micrometer-commons-1.13.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-webmvc/6.1.8/spring-webmvc-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-context/6.1.8/spring-context-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-expression/6.1.8/spring-expression-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-data-jpa/3.3.0/spring-boot-starter-data-jpa-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-aop/3.3.0/spring-boot-starter-aop-3.3.0.jar:/home/emmerisalu/.m2/repository/org/aspectj/aspectjweaver/1.9.22/aspectjweaver-1.9.22.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-jdbc/3.3.0/spring-boot-starter-jdbc-3.3.0.jar:/home/emmerisalu/.m2/repository/com/zaxxer/HikariCP/5.1.0/HikariCP-5.1.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-jdbc/6.1.8/spring-jdbc-6.1.8.jar:/home/emmerisalu/.m2/repository/org/hibernate/orm/hibernate-core/6.5.2.Final/hibernate-core-6.5.2.Final.jar:/home/emmerisalu/.m2/repository/jakarta/persistence/jakarta.persistence-api/3.1.0/jakarta.persistence-api-3.1.0.jar:/home/emmerisalu/.m2/repository/jakarta/transaction/jakarta.transaction-api/2.0.1/jakarta.transaction-api-2.0.1.jar:/home/emmerisalu/.m2/repository/org/jboss/logging/jboss-logging/3.5.3.Final/jboss-logging-3.5.3.Final.jar:/home/emmerisalu/.m2/repository/org/hibernate/common/hibernate-commons-annotations/6.0.6.Final/hibernate-commons-annotations-6.0.6.Final.jar:/home/emmerisalu/.m2/repository/io/smallrye/jandex/3.1.2/jandex-3.1.2.jar:/home/emmerisalu/.m2/repository/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar:/home/emmerisalu/.m2/repository/net/bytebuddy/byte-buddy/1.14.16/byte-buddy-1.14.16.jar:/home/emmerisalu/.m2/repository/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.jar:/home/emmerisalu/.m2/repository/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.jar:/home/emmerisalu/.m2/repository/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.jar:/home/emmerisalu/.m2/repository/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.jar:/home/emmerisalu/.m2/repository/jakarta/inject/jakarta.inject-api/2.0.1/jakarta.inject-api-2.0.1.jar:/home/emmerisalu/.m2/repository/org/antlr/antlr4-runtime/4.13.0/antlr4-runtime-4.13.0.jar:/home/emmerisalu/.m2/repository/org/springframework/data/spring-data-jpa/3.3.0/spring-data-jpa-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/data/spring-data-commons/3.3.0/spring-data-commons-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-orm/6.1.8/spring-orm-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-tx/6.1.8/spring-tx-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-aspects/6.1.8/spring-aspects-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-validation/3.3.0/spring-boot-starter-validation-3.3.0.jar:/home/emmerisalu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-el/10.1.24/tomcat-embed-el-10.1.24.jar:/home/emmerisalu/.m2/repository/org/hibernate/validator/hibernate-validator/8.0.1.Final/hibernate-validator-8.0.1.Final.jar:/home/emmerisalu/.m2/repository/jakarta/validation/jakarta.validation-api/3.0.2/jakarta.validation-api-3.0.2.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-security/3.3.0/spring-boot-starter-security-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-aop/6.1.8/spring-aop-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-config/6.3.0/spring-security-config-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-web/6.3.0/spring-security-web-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-mail/3.3.0/spring-boot-starter-mail-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-context-support/6.1.8/spring-context-support-6.1.8.jar:/home/emmerisalu/.m2/repository/org/eclipse/angus/jakarta.mail/2.0.3/jakarta.mail-2.0.3.jar:/home/emmerisalu/.m2/repository/jakarta/activation/jakarta.activation-api/2.1.3/jakarta.activation-api-2.1.3.jar:/home/emmerisalu/.m2/repository/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.jar:/home/emmerisalu/.m2/repository/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar:/home/emmerisalu/.m2/repository/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0.jar:/home/emmerisalu/.m2/repository/org/flywaydb/flyway-core/10.11.0/flyway-core-10.11.0.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.17.1/jackson-dataformat-toml-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.17.1/jackson-core-2.17.1.jar:/home/emmerisalu/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:/home/emmerisalu/.m2/repository/org/flywaydb/flyway-database-postgresql/10.11.0/flyway-database-postgresql-10.11.0.jar:/home/emmerisalu/.m2/repository/io/jsonwebtoken/jjwt-api/0.11.5/jjwt-api-0.11.5.jar:/home/emmerisalu/.m2/repository/io/jsonwebtoken/jjwt-impl/0.11.5/jjwt-impl-0.11.5.jar:/home/emmerisalu/.m2/repository/io/jsonwebtoken/jjwt-jackson/0.11.5/jjwt-jackson-0.11.5.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.17.1/jackson-databind-2.17.1.jar:/home/emmerisalu/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.17.1/jackson-annotations-2.17.1.jar:/home/emmerisalu/.m2/repository/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-crypto/6.3.0/spring-security-crypto-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-webflux/3.3.0/spring-boot-starter-webflux-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-reactor-netty/3.3.0/spring-boot-starter-reactor-netty-3.3.0.jar:/home/emmerisalu/.m2/repository/io/projectreactor/netty/reactor-netty-http/1.1.19/reactor-netty-http-1.1.19.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-http/4.1.110.Final/netty-codec-http-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-common/4.1.110.Final/netty-common-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-buffer/4.1.110.Final/netty-buffer-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport/4.1.110.Final/netty-transport-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec/4.1.110.Final/netty-codec-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-handler/4.1.110.Final/netty-handler-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-http2/4.1.110.Final/netty-codec-http2-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver-dns/4.1.110.Final/netty-resolver-dns-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver/4.1.110.Final/netty-resolver-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-dns/4.1.110.Final/netty-codec-dns-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver-dns-native-macos/4.1.110.Final/netty-resolver-dns-native-macos-4.1.110.Final-osx-x86_64.jar:/home/emmerisalu/.m2/repository/io/netty/netty-resolver-dns-classes-macos/4.1.110.Final/netty-resolver-dns-classes-macos-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport-native-epoll/4.1.110.Final/netty-transport-native-epoll-4.1.110.Final-linux-x86_64.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport-native-unix-common/4.1.110.Final/netty-transport-native-unix-common-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-transport-classes-epoll/4.1.110.Final/netty-transport-classes-epoll-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/projectreactor/netty/reactor-netty-core/1.1.19/reactor-netty-core-1.1.19.jar:/home/emmerisalu/.m2/repository/io/netty/netty-handler-proxy/4.1.110.Final/netty-handler-proxy-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/io/netty/netty-codec-socks/4.1.110.Final/netty-codec-socks-4.1.110.Final.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-webflux/6.1.8/spring-webflux-6.1.8.jar:/home/emmerisalu/.m2/repository/io/projectreactor/reactor-core/3.6.6/reactor-core-3.6.6.jar:/home/emmerisalu/.m2/repository/org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar:/home/emmerisalu/.m2/repository/com/google/auth/google-auth-library-oauth2-http/1.11.0/google-auth-library-oauth2-http-1.11.0.jar:/home/emmerisalu/.m2/repository/com/google/auto/value/auto-value-annotations/1.9/auto-value-annotations-1.9.jar:/home/emmerisalu/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/home/emmerisalu/.m2/repository/com/google/auth/google-auth-library-credentials/1.11.0/google-auth-library-credentials-1.11.0.jar:/home/emmerisalu/.m2/repository/com/google/http-client/google-http-client/1.42.2/google-http-client-1.42.2.jar:/home/emmerisalu/.m2/repository/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar:/home/emmerisalu/.m2/repository/io/opencensus/opencensus-api/0.31.1/opencensus-api-0.31.1.jar:/home/emmerisalu/.m2/repository/io/grpc/grpc-context/1.27.2/grpc-context-1.27.2.jar:/home/emmerisalu/.m2/repository/io/opencensus/opencensus-contrib-http-util/0.31.1/opencensus-contrib-http-util-0.31.1.jar:/home/emmerisalu/.m2/repository/com/google/http-client/google-http-client-gson/1.42.2/google-http-client-gson-1.42.2.jar:/home/emmerisalu/.m2/repository/com/google/guava/guava/31.0.1-android/guava-31.0.1-android.jar:/home/emmerisalu/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar:/home/emmerisalu/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/home/emmerisalu/.m2/repository/org/checkerframework/checker-compat-qual/2.5.5/checker-compat-qual-2.5.5.jar:/home/emmerisalu/.m2/repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.jar:/home/emmerisalu/.m2/repository/com/google/api-client/google-api-client/2.2.0/google-api-client-2.2.0.jar:/home/emmerisalu/.m2/repository/commons-codec/commons-codec/1.16.1/commons-codec-1.16.1.jar:/home/emmerisalu/.m2/repository/com/google/oauth-client/google-oauth-client/1.34.1/google-oauth-client-1.34.1.jar:/home/emmerisalu/.m2/repository/com/google/http-client/google-http-client-apache-v2/1.42.3/google-http-client-apache-v2-1.42.3.jar:/home/emmerisalu/.m2/repository/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar:/home/emmerisalu/.m2/repository/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar:/home/emmerisalu/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/home/emmerisalu/.m2/repository/com/google/api-client/google-api-client-gson/2.2.0/google-api-client-gson-2.2.0.jar:/home/emmerisalu/.m2/repository/com/restfb/restfb/2023.12.0/restfb-2023.12.0.jar:/home/emmerisalu/.m2/repository/dev/samstevens/totp/totp/1.7.1/totp-1.7.1.jar:/home/emmerisalu/.m2/repository/com/google/zxing/core/3.4.0/core-3.4.0.jar:/home/emmerisalu/.m2/repository/com/google/zxing/javase/3.4.0/javase-3.4.0.jar:/home/emmerisalu/.m2/repository/com/beust/jcommander/1.72/jcommander-1.72.jar:/home/emmerisalu/.m2/repository/com/github/jai-imageio/jai-imageio-core/1.4.0/jai-imageio-core-1.4.0.jar:/home/emmerisalu/.m2/repository/com/h2database/h2/2.2.224/h2-2.2.224.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-starter-test/3.3.0/spring-boot-starter-test-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-test/3.3.0/spring-boot-test-3.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/3.3.0/spring-boot-test-autoconfigure-3.3.0.jar:/home/emmerisalu/.m2/repository/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar:/home/emmerisalu/.m2/repository/jakarta/xml/bind/jakarta.xml.bind-api/4.0.2/jakarta.xml.bind-api-4.0.2.jar:/home/emmerisalu/.m2/repository/net/minidev/json-smart/2.5.1/json-smart-2.5.1.jar:/home/emmerisalu/.m2/repository/net/minidev/accessors-smart/2.5.1/accessors-smart-2.5.1.jar:/home/emmerisalu/.m2/repository/org/ow2/asm/asm/9.6/asm-9.6.jar:/home/emmerisalu/.m2/repository/org/assertj/assertj-core/3.25.3/assertj-core-3.25.3.jar:/home/emmerisalu/.m2/repository/org/awaitility/awaitility/4.2.1/awaitility-4.2.1.jar:/home/emmerisalu/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/home/emmerisalu/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/emmerisalu/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/home/emmerisalu/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/home/emmerisalu/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/home/emmerisalu/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/home/emmerisalu/.m2/repository/org/mockito/mockito-core/5.11.0/mockito-core-5.11.0.jar:/home/emmerisalu/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.16/byte-buddy-agent-1.14.16.jar:/home/emmerisalu/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:/home/emmerisalu/.m2/repository/org/mockito/mockito-junit-jupiter/5.11.0/mockito-junit-jupiter-5.11.0.jar:/home/emmerisalu/.m2/repository/org/skyscreamer/jsonassert/1.5.1/jsonassert-1.5.1.jar:/home/emmerisalu/.m2/repository/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-core/6.1.8/spring-core-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-jcl/6.1.8/spring-jcl-6.1.8.jar:/home/emmerisalu/.m2/repository/org/springframework/spring-test/6.1.8/spring-test-6.1.8.jar:/home/emmerisalu/.m2/repository/org/xmlunit/xmlunit-core/2.9.1/xmlunit-core-2.9.1.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-test/6.3.0/spring-security-test-6.3.0.jar:/home/emmerisalu/.m2/repository/org/springframework/security/spring-security-core/6.3.0/spring-security-core-6.3.0.jar:/home/emmerisalu/.m2/repository/org/testcontainers/testcontainers/1.19.3/testcontainers-1.19.3.jar:/home/emmerisalu/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar:/home/emmerisalu/.m2/repository/org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2.jar:/home/emmerisalu/.m2/repository/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar:/home/emmerisalu/.m2/repository/org/apache/commons/commons-compress/1.24.0/commons-compress-1.24.0.jar:/home/emmerisalu/.m2/repository/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar:/home/emmerisalu/.m2/repository/org/jetbrains/annotations/17.0.0/annotations-17.0.0.jar:/home/emmerisalu/.m2/repository/com/github/docker-java/docker-java-api/3.3.4/docker-java-api-3.3.4.jar:/home/emmerisalu/.m2/repository/com/github/docker-java/docker-java-transport-zerodep/3.3.4/docker-java-transport-zerodep-3.3.4.jar:/home/emmerisalu/.m2/repository/com/github/docker-java/docker-java-transport/3.3.4/docker-java-transport-3.3.4.jar:/home/emmerisalu/.m2/repository/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar:/home/emmerisalu/.m2/repository/org/testcontainers/postgresql/1.19.3/postgresql-1.19.3.jar:/home/emmerisalu/.m2/repository/org/testcontainers/jdbc/1.19.3/jdbc-1.19.3.jar:/home/emmerisalu/.m2/repository/org/testcontainers/database-commons/1.19.8/database-commons-1.19.8.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/emmerisalu"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-04-21"/>
+    <property name="java.home" value="/usr/lib/jvm/java-21-openjdk-amd64"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/emmerisalu/projects/backend"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="FILE_LOG_CHARSET" value="UTF-8"/>
+    <property name="java.awt.headless" value="true"/>
+    <property name="surefire.real.class.path" value="/home/emmerisalu/projects/backend/target/surefire/surefirebooter-20260719235333555_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.11+10-1-24.04.2-Ubuntu"/>
+    <property name="user.name" value="emmerisalu"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="6.6.87.2-microsoft-standard-WSL2"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="localRepository" value="/home/emmerisalu/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://bugs.launchpad.net/ubuntu/+source/openjdk-21"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="com.zaxxer.hikari.pool_number" value="1"/>
+    <property name="java.version" value="21.0.11"/>
+    <property name="user.dir" value="/home/emmerisalu/projects/backend"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="PID" value="156035"/>
+    <property name="CONSOLE_LOG_CHARSET" value="UTF-8"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="java.vendor" value="Ubuntu"/>
+    <property name="java.vm.version" value="21.0.11+10-1-24.04.2-Ubuntu"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="65.0"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(%-5level) %clr([%thread]){cyan} %clr(%logger{36}){yellow} - %msg%n"/>
+  </properties>
+  <testcase name="fullAuthenticationFlow" classname="com.lampify.controller.AuthIntegrationTest" time="0.812">
+    <system-out><![CDATA[Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+23:53:34.302 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.lampify.controller.AuthIntegrationTest]: AuthIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+23:53:34.414 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.lampify.ESTValgusBackendApplication for test class com.lampify.controller.AuthIntegrationTest
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.0)
+
+2026-07-19 23:53:34 INFO  [main] c.l.controller.AuthIntegrationTest - Starting AuthIntegrationTest using Java 21.0.11 with PID 156035 (started by emmerisalu in /home/emmerisalu/projects/backend)
+2026-07-19 23:53:34 DEBUG [main] c.l.controller.AuthIntegrationTest - Running with Spring Boot v3.3.0, Spring v6.1.8
+2026-07-19 23:53:34 INFO  [main] c.l.controller.AuthIntegrationTest - The following 1 profile is active: "test"
+2026-07-19 23:53:35 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-19 23:53:35 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 123 ms. Found 8 JPA repository interfaces.
+2026-07-19 23:53:36 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-19 23:53:36 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-07-19 23:53:36 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-07-19 23:53:36 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-19 23:53:36 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-19 23:53:36 INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:lampify_test user=SA
+2026-07-19 23:53:36 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-19 23:53:36 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-19 23:53:37 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists categories cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists password_reset_tokens cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists product_images cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists products cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists refresh_tokens cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists revoked_access_tokens cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists two_factor_backup_codes cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    drop table if exists users cascade 
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table categories (
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        name varchar(100) not null,
+        slug varchar(100) not null unique,
+        description TEXT,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table password_reset_tokens (
+        used boolean not null,
+        created_at timestamp(6) with time zone not null,
+        expires_at timestamp(6) with time zone not null,
+        id bigint generated by default as identity,
+        user_id bigint not null,
+        token varchar(255) not null unique,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table product_images (
+        is_primary boolean not null,
+        sort_order integer not null,
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        product_id bigint not null,
+        url_path varchar(500) not null,
+        file_name varchar(255) not null,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table products (
+        height_cm numeric(8,2),
+        height_in numeric(8,2),
+        length_cm numeric(8,2),
+        length_in numeric(8,2),
+        price numeric(10,2) not null,
+        rating numeric(3,2) not null,
+        stock_quantity integer not null,
+        weight_kg numeric(8,3),
+        weight_lb numeric(8,3),
+        width_cm numeric(8,2),
+        width_in numeric(8,2),
+        category_id bigint not null,
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        brand varchar(100) not null,
+        description TEXT not null,
+        name varchar(255) not null,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table refresh_tokens (
+        revoked boolean not null,
+        used boolean not null,
+        created_at timestamp(6) with time zone not null,
+        expires_at timestamp(6) with time zone not null,
+        id bigint generated by default as identity,
+        user_id bigint not null,
+        token varchar(255) not null unique,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table revoked_access_tokens (
+        expires_at timestamp(6) with time zone not null,
+        id bigint generated by default as identity,
+        revoked_at timestamp(6) with time zone not null,
+        jti varchar(255) not null unique,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table two_factor_backup_codes (
+        used boolean not null,
+        created_at timestamp(6) with time zone not null,
+        id bigint generated by default as identity,
+        user_id bigint not null,
+        code_hash varchar(255) not null,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    create table users (
+        enabled boolean not null,
+        failed_login_attempts integer not null,
+        two_factor_enabled boolean not null,
+        account_locked_until timestamp(6),
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        last_login_at timestamp(6),
+        updated_at timestamp(6) not null,
+        email varchar(255) not null unique,
+        password varchar(255) not null,
+        provider varchar(255),
+        two_factor_secret varchar(255),
+        username varchar(255) not null,
+        primary key (id)
+    )
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    alter table if exists password_reset_tokens 
+       add constraint FKk3ndxg5xp6v7wd4gjyusp15gq 
+       foreign key (user_id) 
+       references users
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    alter table if exists product_images 
+       add constraint FKqnq71xsohugpqwf3c9gxmsuy 
+       foreign key (product_id) 
+       references products
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    alter table if exists products 
+       add constraint FKog2rp4qthbtt2lfyhfo32lsw9 
+       foreign key (category_id) 
+       references categories
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    alter table if exists refresh_tokens 
+       add constraint FK1lih5y2npsf8u5o3vhdb9y0os 
+       foreign key (user_id) 
+       references users
+2026-07-19 23:53:37 DEBUG [main] org.hibernate.SQL - 
+    alter table if exists two_factor_backup_codes 
+       add constraint FK33i0g5q6rixphf8nctftlffkn 
+       foreign key (user_id) 
+       references users
+2026-07-19 23:53:37 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-19 23:53:38 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-19 23:53:38 WARN  [main] o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 20837d95-4c32-45af-939e-730599768742
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-07-19 23:53:38 INFO  [main] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-07-19 23:53:38 INFO  [main] o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@aec9672, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1cfb59e, org.springframework.security.web.context.SecurityContextHolderFilter@291fba9, org.springframework.security.web.header.HeaderWriterFilter@c54e23b, org.springframework.web.filter.CorsFilter@77035caa, org.springframework.security.web.authentication.logout.LogoutFilter@57d6f569, com.lampify.security.RateLimitingFilter@2c3f81ef, com.lampify.security.JwtAuthenticationFilter@7bc239db, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@156b31d, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@f8dfcbe, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@18ac2dfe, org.springframework.security.web.access.ExceptionTranslationFilter@16a4e4c9, org.springframework.security.web.access.intercept.AuthorizationFilter@613d42ab]
+2026-07-19 23:53:38 INFO  [main] o.s.b.t.m.w.SpringBootMockServletContext - Initializing Spring TestDispatcherServlet ''
+2026-07-19 23:53:38 INFO  [main] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+2026-07-19 23:53:38 INFO  [main] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+2026-07-19 23:53:38 INFO  [main] c.l.controller.AuthIntegrationTest - Started AuthIntegrationTest in 4.034 seconds (process running for 4.96)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        users
+        (account_locked_until, created_at, email, enabled, failed_login_attempts, last_login_at, password, provider, two_factor_enabled, two_factor_secret, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.account_locked_until,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.enabled,
+        u1_0.failed_login_attempts,
+        u1_0.last_login_at,
+        u1_0.password,
+        u1_0.provider,
+        u1_0.two_factor_enabled,
+        u1_0.two_factor_secret,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        rt1_0.id,
+        rt1_0.created_at,
+        rt1_0.expires_at,
+        rt1_0.revoked,
+        rt1_0.token,
+        rt1_0.used,
+        rt1_0.user_id 
+    from
+        refresh_tokens rt1_0 
+    where
+        rt1_0.token=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.account_locked_until,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.enabled,
+        u1_0.failed_login_attempts,
+        u1_0.last_login_at,
+        u1_0.password,
+        u1_0.provider,
+        u1_0.two_factor_enabled,
+        u1_0.two_factor_secret,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        users u1_0 
+    where
+        u1_0.id=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    update
+        refresh_tokens 
+    set
+        created_at=?,
+        expires_at=?,
+        revoked=?,
+        token=?,
+        used=?,
+        user_id=? 
+    where
+        id=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        rt1_0.id,
+        rt1_0.created_at,
+        rt1_0.expires_at,
+        rt1_0.revoked,
+        rt1_0.token,
+        rt1_0.used,
+        rt1_0.user_id 
+    from
+        refresh_tokens rt1_0 
+    where
+        rt1_0.token=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        rt1_0.id,
+        rt1_0.created_at,
+        rt1_0.expires_at,
+        rt1_0.revoked,
+        rt1_0.token,
+        rt1_0.used,
+        rt1_0.user_id 
+    from
+        refresh_tokens rt1_0 
+    where
+        rt1_0.token=?
+]]></system-out>
+    <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/home/emmerisalu/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.16/byte-buddy-agent-1.14.16.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+  </testcase>
+  <testcase name="refreshTokenRotationRejectsOldToken" classname="com.lampify.controller.AuthIntegrationTest" time="0.144">
+    <system-out><![CDATA[2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        users
+        (account_locked_until, created_at, email, enabled, failed_login_attempts, last_login_at, password, provider, two_factor_enabled, two_factor_secret, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.account_locked_until,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.enabled,
+        u1_0.failed_login_attempts,
+        u1_0.last_login_at,
+        u1_0.password,
+        u1_0.provider,
+        u1_0.two_factor_enabled,
+        u1_0.two_factor_secret,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        rt1_0.id,
+        rt1_0.created_at,
+        rt1_0.expires_at,
+        rt1_0.revoked,
+        rt1_0.token,
+        rt1_0.used,
+        rt1_0.user_id 
+    from
+        refresh_tokens rt1_0 
+    where
+        rt1_0.token=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.account_locked_until,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.enabled,
+        u1_0.failed_login_attempts,
+        u1_0.last_login_at,
+        u1_0.password,
+        u1_0.provider,
+        u1_0.two_factor_enabled,
+        u1_0.two_factor_secret,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        users u1_0 
+    where
+        u1_0.id=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    update
+        refresh_tokens 
+    set
+        created_at=?,
+        expires_at=?,
+        revoked=?,
+        token=?,
+        used=?,
+        user_id=? 
+    where
+        id=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        rt1_0.id,
+        rt1_0.created_at,
+        rt1_0.expires_at,
+        rt1_0.revoked,
+        rt1_0.token,
+        rt1_0.used,
+        rt1_0.user_id 
+    from
+        refresh_tokens rt1_0 
+    where
+        rt1_0.token=?
+]]></system-out>
+  </testcase>
+  <testcase name="passwordResetFlow" classname="com.lampify.controller.AuthIntegrationTest" time="0.089">
+    <system-out><![CDATA[2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        users
+        (account_locked_until, created_at, email, enabled, failed_login_attempts, last_login_at, password, provider, two_factor_enabled, two_factor_secret, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expires_at, revoked, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.account_locked_until,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.enabled,
+        u1_0.failed_login_attempts,
+        u1_0.last_login_at,
+        u1_0.password,
+        u1_0.provider,
+        u1_0.two_factor_enabled,
+        u1_0.two_factor_secret,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        prt1_0.id,
+        prt1_0.created_at,
+        prt1_0.expires_at,
+        prt1_0.token,
+        prt1_0.used,
+        prt1_0.user_id 
+    from
+        password_reset_tokens prt1_0 
+    where
+        prt1_0.user_id=?
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    insert 
+    into
+        password_reset_tokens
+        (created_at, expires_at, token, used, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, default)
+2026-07-19 23:53:39 INFO  [main] com.lampify.service.EmailService - Mail not configured. Password reset link for reset.user@example.com: http://localhost:5173/reset-password?token=51aa059f-6d1a-49d6-b3c9-dd13d74b54f9
+2026-07-19 23:53:39 DEBUG [main] org.hibernate.SQL - 
+    select
+        prt1_0.id,
+        prt1_0.created_at,
+        prt1_0.expires_at,
+        prt1_0.token,
+        prt1_0.used,
+        prt1_0.user_id 
+    from
+        password_reset_tokens prt1_0 
+    where
+        prt1_0.token=?
+]]></system-out>
+  </testcase>
+</testsuite>

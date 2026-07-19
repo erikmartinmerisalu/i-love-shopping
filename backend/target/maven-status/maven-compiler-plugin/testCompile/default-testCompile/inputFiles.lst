@@ -1,0 +1,9 @@
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/controller/AuthControllerTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/controller/AuthIntegrationTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/controller/AuthSecurityTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/controller/OAuthEndpointSecurityTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/controller/ProductCatalogIntegrationTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/controller/ProductCatalogSecurityTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/security/RateLimitingFilterTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/service/AuthServiceTest.java
+/home/emmerisalu/projects/backend/src/test/java/com/lampify/service/ProductServiceTest.java

@@ -5,12 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 /**
  * Google reCAPTCHA v2 (checkbox) validation for registration.
@@ -48,12 +48,23 @@ public class CaptchaValidator {
         try {
             CaptchaResponse response = webClient.post()
                     .uri(verifyUrl)
-                    .bodyValue(buildRequestBody(captchaToken))
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData("secret", secretKey).with("response", captchaToken))
                     .retrieve()
                     .bodyToMono(CaptchaResponse.class)
                     .block();
 
-            return response != null && response.isSuccess();
+            if (response == null) {
+                return false;
+            }
+
+            if (!response.isSuccess()) {
+                System.err.println("CAPTCHA verification failed: "
+                        + Arrays.toString(response.getErrorCodes())
+                        + " (hostname=" + response.getHostname() + ")");
+            }
+
+            return response.isSuccess();
         } catch (Exception e) {
             System.err.println("CAPTCHA validation error: " + e.getMessage());
             return false;
@@ -62,13 +73,6 @@ public class CaptchaValidator {
 
     public boolean isCaptchaRequired() {
         return captchaEnabled && secretKey != null && !secretKey.isEmpty();
-    }
-
-    private Map<String, String> buildRequestBody(String captchaToken) {
-        Map<String, String> body = new HashMap<>();
-        body.put("secret", secretKey);
-        body.put("response", captchaToken);
-        return body;
     }
 
     /**
