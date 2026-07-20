@@ -16,6 +16,7 @@ import java.io.StringWriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class RateLimitingFilterTest {
@@ -37,8 +38,8 @@ class RateLimitingFilterTest {
         ReflectionTestUtils.setField(filter, "enabled", true);
         ReflectionTestUtils.setField(filter, "limit", 3);
         ReflectionTestUtils.setField(filter, "windowSeconds", 60);
-        when(request.getRequestURI()).thenReturn("/api/auth/login");
-        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+        lenient().when(request.getRequestURI()).thenReturn("/api/auth/login");
+        lenient().when(request.getRemoteAddr()).thenReturn("127.0.0.1");
     }
 
     @Test
@@ -62,5 +63,22 @@ class RateLimitingFilterTest {
 
         verify(filterChain, times(3)).doFilter(request, response);
         verify(response).setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+    }
+
+    @Test
+    void skipsRefreshEndpoint() throws Exception {
+        when(request.getRequestURI()).thenReturn("/api/auth/refresh");
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verifyNoInteractions(response);
+    }
+
+    @Test
+    void usesForwardedClientIpWhenPresent() {
+        when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.10, 10.0.0.1");
+
+        assertEquals("203.0.113.10", RateLimitingFilter.resolveClientIp(request));
     }
 }

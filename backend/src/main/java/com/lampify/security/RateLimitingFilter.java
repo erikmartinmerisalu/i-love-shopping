@@ -39,14 +39,21 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getRequestURI();
-        return !path.contains("/auth/") && !path.contains("/uploads/");
+        if (!path.contains("/auth/")) {
+            return true;
+        }
+        // Refresh runs on every page load; rate-limiting it behind a proxy causes shared 429s on Render.
+        if (path.contains("/auth/refresh")) {
+            return true;
+        }
+        return false;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String key = request.getRemoteAddr() + ":" + request.getRequestURI();
+        String key = resolveClientIp(request) + ":" + request.getRequestURI();
         WindowState state = windows.computeIfAbsent(key, ignored -> new WindowState());
 
         long now = System.currentTimeMillis();
@@ -67,5 +74,19 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    static String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank() && !"unknown".equalsIgnoreCase(forwarded)) {
+            return forwarded.split(",")[0].trim();
+        }
+
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank() && !"unknown".equalsIgnoreCase(realIp)) {
+            return realIp.trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }
