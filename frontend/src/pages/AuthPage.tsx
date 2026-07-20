@@ -24,7 +24,7 @@ type Pending2fa = {
 const AuthPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login, register, oauthLogin, verifyTwoFactorLogin, isAuthenticated } = useAuth();
+  const { login, register, oauthLogin, verifyTwoFactorLogin, isAuthenticated, continueAsGuest } = useAuth();
   const [mode, setMode] = useState<AuthMode>(
     location.pathname.includes("register") ? "register" : "login"
   );
@@ -203,6 +203,7 @@ const AuthPage = () => {
   }, [isAuthenticated, mode, navigate]);
 
   const handleContinueAsGuest = () => {
+    continueAsGuest();
     navigate("/products");
   };
 

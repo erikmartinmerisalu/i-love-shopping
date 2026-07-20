@@ -21,7 +21,7 @@ const productImageUrl = (url: string | null | undefined): string => {
 const ProductsPage = () => {
   const navigate = useNavigate();
   const { addToCart, totalItems, cartItems } = useCart();
-  const { logout, user } = useAuth();
+  const { logout, user, isGuest } = useAuth();
   const [cartOpen, setCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [facets, setFacets] = useState<ProductFacets | null>(null);
@@ -132,6 +132,11 @@ const ProductsPage = () => {
   const sliderMin = priceMin ?? facetMin;
   const sliderMax = priceMax ?? facetMax;
 
+  const handleAuthAction = async () => {
+    await logout();
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
@@ -141,12 +146,14 @@ const ProductsPage = () => {
             {user && (
               <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3">
                 <p className="text-sm text-slate-300">Signed in as {user.username}</p>
-                <button
-                  onClick={() => navigate("/profile")}
-                  className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gray-700 transition"
-                >
-                  Profile
-                </button>
+                {!isGuest && (
+                  <button
+                    onClick={() => navigate("/profile")}
+                    className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gray-700 transition"
+                  >
+                    Profile
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -164,10 +171,10 @@ const ProductsPage = () => {
               )}
             </button>
             <button
-              onClick={logout}
+              onClick={handleAuthAction}
               className="bg-rose-700 text-white px-4 py-2 rounded-lg hover:bg-rose-600 transition font-semibold border border-rose-500/40 shadow-sm shadow-rose-900/30"
             >
-              Logout
+              {isGuest ? "Sign in" : "Logout"}
             </button>
           </div>
         </div>

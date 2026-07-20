@@ -2,8 +2,13 @@ import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+type ProtectedRouteProps = {
+  children: ReactNode;
+  allowGuest?: boolean;
+};
+
+const ProtectedRoute = ({ children, allowGuest = false }: ProtectedRouteProps) => {
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -13,7 +18,9 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  const canAccess = isAuthenticated || (allowGuest && isGuest);
+
+  if (!canAccess) {
     return <Navigate to="/login" replace />;
   }
 

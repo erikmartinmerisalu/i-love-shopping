@@ -16,11 +16,20 @@ type AuthResponse = {
   oauthAccount?: boolean;
 };
 
+type AuthUser = {
+  email: string;
+  username: string;
+  provider?: string;
+  oauthAccount?: boolean;
+};
+
 type AuthContextType = {
-  user: { email: string; username: string; provider?: string; oauthAccount?: boolean } | null;
+  user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
+  isGuest: boolean;
   isLoading: boolean;
+  continueAsGuest: () => void;
   login: (email: string, password: string) => Promise<AuthResponse>;
   verifyTwoFactorLogin: (email: string, password: string, code: string) => Promise<AuthResponse>;
   register: (email: string, password: string, confirmPassword: string, captchaChallenge?: string) => Promise<AuthResponse>;
@@ -35,6 +44,24 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const GUEST_SESSION_KEY = "estvalgus_guest";
+
+const guestUser = (): AuthUser => ({
+  email: "",
+  username: "Guest",
+});
+
+const clearGuestSession = () => {
+  sessionStorage.removeItem(GUEST_SESSION_KEY);
+};
+
+const restoreGuestSession = (): AuthUser | null => {
+  if (sessionStorage.getItem(GUEST_SESSION_KEY) === "1") {
+    return guestUser();
+  }
+  return null;
+};
 
 let accessToken: string | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -55,9 +82,19 @@ const authHeaders = (): HeadersInit => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<{ email: string; username: string; provider?: string; oauthAccount?: boolean } | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const isMountedRef = useRef(true);
+
+  const continueAsGuest = useCallback(() => {
+    clearGuestSession();
+    sessionStorage.setItem(GUEST_SESSION_KEY, "1");
+    accessToken = null;
+    clearRefreshTimer();
+    setIsGuest(true);
+    setUser(guestUser());
+  }, []);
 
   const scheduleTokenRefresh = useCallback((token: string) => {
     clearRefreshTimer();
@@ -100,6 +137,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       accessToken = data.accessToken;
+      clearGuestSession();
+      setIsGuest(false);
       setUser({
         email: data.email,
         username: data.username,
@@ -122,8 +161,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!response.ok) {
         accessToken = null;
-        setUser(null);
         clearRefreshTimer();
+        const guest = restoreGuestSession();
+        if (guest) {
+          setIsGuest(true);
+          setUser(guest);
+        } else {
+          setIsGuest(false);
+          setUser(null);
+        }
         return false;
       }
 
@@ -134,13 +180,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       accessToken = null;
-      setUser(null);
       clearRefreshTimer();
+      const guest = restoreGuestSession();
+      if (guest) {
+        setIsGuest(true);
+        setUser(guest);
+      } else {
+        setIsGuest(false);
+        setUser(null);
+      }
       return false;
     } catch {
       accessToken = null;
-      setUser(null);
       clearRefreshTimer();
+      const guest = restoreGuestSession();
+      if (guest) {
+        setIsGuest(true);
+        setUser(guest);
+      } else {
+        setIsGuest(false);
+        setUser(null);
+      }
       return false;
     }
   }, [persistAuth]);
@@ -298,6 +358,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Logout error:", error);
     } finally {
       accessToken = null;
+      clearGuestSession();
+      setIsGuest(false);
       setUser(null);
       clearRefreshTimer();
     }
@@ -308,7 +370,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       token: accessToken,
       isAuthenticated: !!accessToken,
+      isGuest,
       isLoading,
+      continueAsGuest,
       login,
       verifyTwoFactorLogin,
       register,
@@ -321,7 +385,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       refreshSession,
     }),
-    [user, isLoading, persistAuth, refreshSession]
+    [user, isGuest, isLoading, continueAsGuest, persistAuth, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

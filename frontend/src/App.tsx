@@ -42,7 +42,7 @@ function App() {
               <Route
                 path="/products"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowGuest>
                     <ProductsPage />
                   </ProtectedRoute>
                 }
