@@ -30,68 +30,61 @@ const ProductsPage = () => {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [sort, setSort] = useState('relevance');
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [debouncedPriceRange, setDebouncedPriceRange] = useState<[number, number] | null>(null);
+  const [catalogPriceBounds, setCatalogPriceBounds] = useState<{ min: number; max: number } | null>(
+    null
+  );
 
   const [notification, setNotification] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [brokenImageIds, setBrokenImageIds] = useState<Set<number>>(() => new Set());
   const hideToastTimeout = useRef<number | null>(null);
   const clearNotificationTimeout = useRef<number | null>(null);
+  const isFirstLoad = useRef(true);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput), 300);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
-  const boundsMin = facets?.minPrice ?? 0;
-  const boundsMax = facets?.maxPrice ?? 100;
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedPriceRange(priceRange), 300);
+    return () => window.clearTimeout(timer);
+  }, [priceRange]);
+
+  const boundsMin = catalogPriceBounds?.min ?? facets?.minPrice ?? 0;
+  const boundsMax = catalogPriceBounds?.max ?? facets?.maxPrice ?? 100;
   const activeMin = priceRange?.[0] ?? boundsMin;
   const activeMax = priceRange?.[1] ?? boundsMax;
 
-  useEffect(() => {
-    if (!facets) {
-      return;
-    }
-
-    setPriceRange((current) => {
-      if (!current) {
-        return null;
-      }
-
-      const low = Math.max(boundsMin, Math.min(current[0], current[1]));
-      const high = Math.min(boundsMax, Math.max(current[0], current[1]));
-      const clampedLow = Math.min(low, high);
-      const clampedHigh = Math.max(low, high);
-
-      if (clampedLow <= boundsMin && clampedHigh >= boundsMax) {
-        return null;
-      }
-
-      return [clampedLow, clampedHigh];
-    });
-  }, [boundsMin, boundsMax, facets]);
-
   const loadProducts = useCallback(async () => {
-    setLoading(true);
+    if (isFirstLoad.current) {
+      setLoading(true);
+    }
     setError('');
     try {
       const response = await fetchProducts({
         search: debouncedSearch || undefined,
         category: selectedCategorySlug ?? undefined,
         brand: selectedBrand ?? undefined,
-        minPrice: priceRange?.[0],
-        maxPrice: priceRange?.[1],
+        minPrice: debouncedPriceRange?.[0],
+        maxPrice: debouncedPriceRange?.[1],
         sort,
       });
       setProducts(response.products);
       setFacets(response.facets);
       setTotalElements(response.totalElements);
+      setCatalogPriceBounds((current) =>
+        current ?? { min: response.facets.minPrice, max: response.facets.maxPrice }
+      );
     } catch {
       setError('Could not load products. Make sure the backend is running.');
       setProducts([]);
     } finally {
       setLoading(false);
+      isFirstLoad.current = false;
     }
-  }, [debouncedSearch, selectedCategorySlug, selectedBrand, priceRange, sort]);
+  }, [debouncedSearch, selectedCategorySlug, selectedBrand, debouncedPriceRange, sort]);
 
   useEffect(() => {
     loadProducts();
@@ -153,12 +146,17 @@ const ProductsPage = () => {
     const low = Math.min(nextMin, nextMax);
     const high = Math.max(nextMin, nextMax);
 
-    if (low <= boundsMin && high >= boundsMax) {
-      setPriceRange(null);
-      return;
-    }
+    setPriceRange((current) => {
+      if (low <= boundsMin && high >= boundsMax) {
+        return current === null ? current : null;
+      }
 
-    setPriceRange([low, high]);
+      if (current && current[0] === low && current[1] === high) {
+        return current;
+      }
+
+      return [low, high];
+    });
   };
 
   const handleAuthAction = async () => {
@@ -306,7 +304,9 @@ const ProductsPage = () => {
           </div>
 
           <p className="text-sm text-gray-400 mb-4">
-            {loading ? 'Loading products...' : `${totalElements} product${totalElements === 1 ? '' : 's'} found`}
+            {loading && products.length === 0
+              ? 'Loading products...'
+              : `${totalElements} product${totalElements === 1 ? '' : 's'} found`}
           </p>
 
           <div
@@ -330,7 +330,7 @@ const ProductsPage = () => {
             </div>
           )}
 
-          {loading ? (
+          {loading && products.length === 0 ? (
             <div className="text-center py-12 text-gray-400">Loading catalog...</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
