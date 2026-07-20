@@ -39,7 +39,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getRequestURI();
-        return !path.contains("/auth/");
+        return !path.contains("/auth/") && !path.contains("/uploads/");
     }
 
     @Override

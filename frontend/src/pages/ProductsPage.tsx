@@ -4,19 +4,14 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchProducts } from '../api/catalog';
 import Cart from '../components/Cart';
+import DualRangeSlider from '../components/DualRangeSlider';
 import CustomDesign from '../assets/Custom_Design.png';
 import type { Product, ProductFacets } from '../types/catalog';
 import { SORT_OPTIONS } from '../types/catalog';
+import { resolveProductImageUrl } from '../utils/productImageUrl';
 
-const productImageUrl = (url: string | null | undefined): string => {
-  if (!url) {
-    return CustomDesign;
-  }
-  if (url.startsWith('http')) {
-    return url;
-  }
-  return url.startsWith('/api') ? url : `/api${url}`;
-};
+const productImageUrl = (url: string | null | undefined): string =>
+  resolveProductImageUrl(url, CustomDesign);
 
 const ProductsPage = () => {
   const navigate = useNavigate();
@@ -34,11 +29,11 @@ const ProductsPage = () => {
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [sort, setSort] = useState('relevance');
-  const [priceMin, setPriceMin] = useState<number | null>(null);
-  const [priceMax, setPriceMax] = useState<number | null>(null);
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
 
   const [notification, setNotification] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [brokenImageIds, setBrokenImageIds] = useState<Set<number>>(() => new Set());
   const hideToastTimeout = useRef<number | null>(null);
   const clearNotificationTimeout = useRef<number | null>(null);
 
@@ -46,6 +41,34 @@ const ProductsPage = () => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput), 300);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
+
+  const boundsMin = facets?.minPrice ?? 0;
+  const boundsMax = facets?.maxPrice ?? 100;
+  const activeMin = priceRange?.[0] ?? boundsMin;
+  const activeMax = priceRange?.[1] ?? boundsMax;
+
+  useEffect(() => {
+    if (!facets) {
+      return;
+    }
+
+    setPriceRange((current) => {
+      if (!current) {
+        return null;
+      }
+
+      const low = Math.max(boundsMin, Math.min(current[0], current[1]));
+      const high = Math.min(boundsMax, Math.max(current[0], current[1]));
+      const clampedLow = Math.min(low, high);
+      const clampedHigh = Math.max(low, high);
+
+      if (clampedLow <= boundsMin && clampedHigh >= boundsMax) {
+        return null;
+      }
+
+      return [clampedLow, clampedHigh];
+    });
+  }, [boundsMin, boundsMax, facets]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -55,8 +78,8 @@ const ProductsPage = () => {
         search: debouncedSearch || undefined,
         category: selectedCategorySlug ?? undefined,
         brand: selectedBrand ?? undefined,
-        minPrice: priceMin ?? undefined,
-        maxPrice: priceMax ?? undefined,
+        minPrice: priceRange?.[0],
+        maxPrice: priceRange?.[1],
         sort,
       });
       setProducts(response.products);
@@ -68,7 +91,7 @@ const ProductsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, selectedCategorySlug, selectedBrand, priceMin, priceMax, sort]);
+  }, [debouncedSearch, selectedCategorySlug, selectedBrand, priceRange, sort]);
 
   useEffect(() => {
     loadProducts();
@@ -122,15 +145,21 @@ const ProductsPage = () => {
     setSearchInput('');
     setSelectedCategorySlug(null);
     setSelectedBrand(null);
-    setPriceMin(null);
-    setPriceMax(null);
+    setPriceRange(null);
     setSort('relevance');
   };
 
-  const facetMin = facets?.minPrice ?? 0;
-  const facetMax = facets?.maxPrice ?? 100;
-  const sliderMin = priceMin ?? facetMin;
-  const sliderMax = priceMax ?? facetMax;
+  const handlePriceRangeChange = (nextMin: number, nextMax: number) => {
+    const low = Math.min(nextMin, nextMax);
+    const high = Math.max(nextMin, nextMax);
+
+    if (low <= boundsMin && high >= boundsMax) {
+      setPriceRange(null);
+      return;
+    }
+
+    setPriceRange([low, high]);
+  };
 
   const handleAuthAction = async () => {
     await logout();
@@ -234,30 +263,15 @@ const ProductsPage = () => {
 
             <div>
               <h2 className="text-lg font-bold mb-4">Price Range</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>€{sliderMin.toFixed(0)}</span>
-                  <span>€{sliderMax.toFixed(0)}</span>
-                </div>
-                <input
-                  type="range"
-                  min={facetMin}
-                  max={facetMax}
-                  step={1}
-                  value={sliderMin}
-                  onChange={(e) => setPriceMin(Number(e.target.value))}
-                  className="w-full accent-primary"
-                />
-                <input
-                  type="range"
-                  min={facetMin}
-                  max={facetMax}
-                  step={1}
-                  value={sliderMax}
-                  onChange={(e) => setPriceMax(Number(e.target.value))}
-                  className="w-full accent-primary"
-                />
-              </div>
+              <DualRangeSlider
+                min={boundsMin}
+                max={boundsMax}
+                valueMin={activeMin}
+                valueMax={activeMax}
+                step={1}
+                onChange={handlePriceRangeChange}
+                formatLabel={(value) => `€${value.toFixed(0)}`}
+              />
             </div>
 
             <button
@@ -327,11 +341,22 @@ const ProductsPage = () => {
                 >
                   <div className="relative overflow-hidden bg-gray-800 h-80 flex-shrink-0">
                     <img
-                      src={productImageUrl(product.primaryImageUrl)}
+                      src={
+                        brokenImageIds.has(product.id)
+                          ? CustomDesign
+                          : productImageUrl(product.primaryImageUrl)
+                      }
                       alt={product.name}
                       className="w-full h-full object-cover hover:scale-105 transition duration-300 opacity-80"
-                      onError={(e) => {
-                        e.currentTarget.src = CustomDesign;
+                      onError={() => {
+                        setBrokenImageIds((current) => {
+                          if (current.has(product.id)) {
+                            return current;
+                          }
+                          const next = new Set(current);
+                          next.add(product.id);
+                          return next;
+                        });
                       }}
                     />
                     <span className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded text-sm font-semibold">

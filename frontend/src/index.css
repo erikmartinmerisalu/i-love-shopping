@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.dual-range-thumb {
+  pointer-events: none;
+}
+
+.dual-range-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  appearance: none;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgb(15 23 42);
+  background: rgb(56 189 248);
+  cursor: pointer;
+}
+
+.dual-range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgb(15 23 42);
+  background: rgb(56 189 248);
+  cursor: pointer;
+}
+
+.dual-range-thumb::-webkit-slider-runnable-track {
+  appearance: none;
+  background: transparent;
+}
+
+.dual-range-thumb::-moz-range-track {
+  background: transparent;
+}

@@ -1,4 +1,5 @@
 /home/emmerisalu/projects/backend/src/main/java/com/lampify/ESTValgusBackendApplication.java
+/home/emmerisalu/projects/backend/src/main/java/com/lampify/config/CatalogImageBootstrap.java
 /home/emmerisalu/projects/backend/src/main/java/com/lampify/config/DotenvLoader.java
 /home/emmerisalu/projects/backend/src/main/java/com/lampify/config/SecurityConfig.java
 /home/emmerisalu/projects/backend/src/main/java/com/lampify/config/WebClientConfig.java

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.lampify.controller.OAuthEndpointSecurityTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.382 s -- in com.lampify.controller.OAuthEndpointSecurityTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.168 s -- in com.lampify.controller.OAuthEndpointSecurityTest

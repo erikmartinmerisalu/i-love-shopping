@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.lampify.controller.AuthControllerTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.354 s -- in com.lampify.controller.AuthControllerTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.301 s -- in com.lampify.controller.AuthControllerTest

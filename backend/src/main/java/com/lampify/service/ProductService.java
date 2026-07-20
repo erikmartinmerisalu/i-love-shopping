@@ -149,7 +149,7 @@ public class ProductService {
     }
 
     private String resolvePrimaryImage(Product product) {
-        return product.getImages().stream()
+        String url = product.getImages().stream()
                 .filter(ProductImage::isPrimaryImage)
                 .map(ProductImage::getUrlPath)
                 .findFirst()
@@ -157,5 +157,11 @@ public class ProductService {
                         .map(ProductImage::getUrlPath)
                         .findFirst()
                         .orElse(null));
+
+        if (url != null && fileStorageService.productImageExists(url)) {
+            return url;
+        }
+
+        return null;
     }
 }

@@ -33,6 +33,7 @@ com/lampify/service/AuthService.class
 com/lampify/repository/ProductImageRepository.class
 com/lampify/repository/CategoryRepository.class
 com/lampify/dto/AuthRequest.class
+com/lampify/config/CatalogImageBootstrap.class
 com/lampify/repository/UserRepository.class
 com/lampify/repository/ProductRepository.class
 com/lampify/repository/ProductRepositoryCustom.class
