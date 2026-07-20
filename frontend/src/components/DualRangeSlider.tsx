@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 type DualRangeSliderProps = {
   min: number;
   max: number;
@@ -17,11 +19,25 @@ const DualRangeSlider = ({
   onChange,
   formatLabel = (value) => String(value),
 }: DualRangeSliderProps) => {
+  const [activeThumb, setActiveThumb] = useState<"min" | "max" | null>(null);
+
   const safeMin = Math.min(valueMin, valueMax);
   const safeMax = Math.max(valueMin, valueMax);
   const span = max - min || 1;
   const minPercent = ((safeMin - min) / span) * 100;
   const maxPercent = ((safeMax - min) / span) * 100;
+  const thumbsClose = safeMax - safeMin <= step;
+
+  useEffect(() => {
+    const clearActiveThumb = () => setActiveThumb(null);
+    window.addEventListener("pointerup", clearActiveThumb);
+    return () => window.removeEventListener("pointerup", clearActiveThumb);
+  }, []);
+
+  const minZIndex =
+    activeThumb === "min" ? 40 : activeThumb === "max" ? 20 : thumbsClose ? 40 : 20;
+  const maxZIndex =
+    activeThumb === "max" ? 40 : activeThumb === "min" ? 20 : thumbsClose ? 30 : 30;
 
   const handleMinChange = (nextMin: number) => {
     onChange(Math.min(nextMin, safeMax), safeMax);
@@ -54,8 +70,10 @@ const DualRangeSlider = ({
           max={max}
           step={step}
           value={safeMin}
+          onPointerDown={() => setActiveThumb("min")}
           onChange={(event) => handleMinChange(Number(event.target.value))}
-          className="dual-range-thumb absolute inset-0 z-20 w-full cursor-pointer appearance-none bg-transparent"
+          className="dual-range-thumb absolute inset-0 w-full cursor-pointer appearance-none bg-transparent"
+          style={{ zIndex: minZIndex }}
           aria-label="Minimum price"
         />
         <input
@@ -64,8 +82,10 @@ const DualRangeSlider = ({
           max={max}
           step={step}
           value={safeMax}
+          onPointerDown={() => setActiveThumb("max")}
           onChange={(event) => handleMaxChange(Number(event.target.value))}
-          className="dual-range-thumb absolute inset-0 z-30 w-full cursor-pointer appearance-none bg-transparent"
+          className="dual-range-thumb absolute inset-0 w-full cursor-pointer appearance-none bg-transparent"
+          style={{ zIndex: maxZIndex }}
           aria-label="Maximum price"
         />
       </div>
