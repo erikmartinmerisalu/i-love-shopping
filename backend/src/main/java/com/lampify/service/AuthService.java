@@ -121,6 +121,10 @@ public class AuthService {
             return failure("Account disabled");
         }
 
+        if (!user.isPasswordLoginEnabled() || isSocialProvider(user.getProvider())) {
+            return failure(formatSocialSignInMessage(user.getProvider()));
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return failure("Invalid email or password");
         }
@@ -207,6 +211,11 @@ public class AuthService {
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
+            if (!canResetPassword(user)) {
+                return failure(formatSocialSignInMessage(user.getProvider())
+                        + " Password reset is not available for social sign-in accounts.");
+            }
+
             passwordResetTokenRepository.deleteByUserId(user.getId());
 
             PasswordResetToken resetToken = new PasswordResetToken();
@@ -238,7 +247,12 @@ public class AuthService {
         }
 
         User user = token.getUser();
+        if (!canResetPassword(user)) {
+            return failure("Password reset is not available for social sign-in accounts");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPasswordLoginEnabled(true);
         userRepository.save(user);
 
         token.setUsed(true);
@@ -392,12 +406,15 @@ public class AuthService {
             created.setUsername(name != null && !name.isBlank() ? name : normalizedEmail.split("@", 2)[0]);
             created.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             created.setProvider(provider);
+            created.setPasswordLoginEnabled(false);
             created.setEnabled(true);
             return userRepository.save(created);
         });
 
-        if (user.getProvider() == null) {
-            user.setProvider(provider);
+        if (userOptional.isPresent() && isSocialProvider(user.getProvider())
+                && user.getProvider().equalsIgnoreCase(provider)
+                && user.isPasswordLoginEnabled()) {
+            user.setPasswordLoginEnabled(false);
             userRepository.save(user);
         }
 
@@ -414,13 +431,8 @@ public class AuthService {
         return issueTokens(user, "OAuth login successful");
     }
 
-    private boolean isOAuthUser(User user) {
-        String provider = user.getProvider();
-        return provider != null && (provider.equals("google") || provider.equals("facebook"));
-    }
-
     private boolean verifyPasswordIfRequired(User user, String password) {
-        if (isOAuthUser(user)) {
+        if (!user.isPasswordLoginEnabled() || isSocialProvider(user.getProvider())) {
             return true;
         }
         return password != null && !password.isBlank() && passwordEncoder.matches(password, user.getPassword());
@@ -430,7 +442,35 @@ public class AuthService {
         response.setEmail(user.getEmail());
         response.setUsername(user.getUsername());
         response.setProvider(user.getProvider());
-        response.setOauthAccount(isOAuthUser(user));
+        response.setOauthAccount(isSocialProvider(user.getProvider()) || !user.isPasswordLoginEnabled());
+    }
+
+    private boolean canResetPassword(User user) {
+        if (!user.isPasswordLoginEnabled()) {
+            return false;
+        }
+        return !isSocialProvider(user.getProvider());
+    }
+
+    private boolean isSocialProvider(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return false;
+        }
+        return switch (provider.toLowerCase()) {
+            case "google", "facebook" -> true;
+            default -> false;
+        };
+    }
+
+    private String formatSocialSignInMessage(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return "This account uses social sign-in.";
+        }
+        return switch (provider.toLowerCase()) {
+            case "google" -> "This account uses Google sign-in.";
+            case "facebook" -> "This account uses Facebook sign-in.";
+            default -> "This account uses " + provider + " sign-in.";
+        };
     }
 
     private boolean verifyTwoFactorCode(User user, String code) {

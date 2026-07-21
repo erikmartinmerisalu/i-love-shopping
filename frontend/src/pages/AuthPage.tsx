@@ -428,11 +428,14 @@ const AuthPage = () => {
                     )}
 
                     {mode === "login" && (
-                      <p className="text-right text-sm">
+                      <div className="space-y-1 text-right text-sm">
                         <Link to="/forgot-password" className="text-sky-300 underline">
                           Forgot password?
                         </Link>
-                      </p>
+                        <p className="text-xs text-slate-500">
+                          Email &amp; password accounts only. Google sign-in is above.
+                        </p>
+                      </div>
                     )}
 
                     <button

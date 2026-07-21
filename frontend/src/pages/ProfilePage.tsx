@@ -2,19 +2,17 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SecuritySettings from "../components/SecuritySettings";
-import StatusBanner from "../components/StatusBanner";
+import { formatAuthProvider, socialSignInLabel } from "../utils/authProvider";
 
-type ProfileTab = "account" | "security" | "password";
+type ProfileTab = "account" | "oauth" | "security" | "password";
 
 const ProfilePage = () => {
-  const { user, logout, forgotPassword } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ProfileTab>("account");
-  const [passwordMessage, setPasswordMessage] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const isOAuthAccount = user?.oauthAccount === true;
+  const providerLabel = formatAuthProvider(user?.provider);
 
   useEffect(() => {
     if (isOAuthAccount && activeTab === "password") {
@@ -26,27 +24,9 @@ const ProfilePage = () => {
     return null;
   }
 
-  const handlePasswordReset = async () => {
-    setPasswordError("");
-    setPasswordMessage("");
-    setIsSendingReset(true);
-
-    try {
-      const data = await forgotPassword(user.email);
-      if (data.success) {
-        setPasswordMessage(data.message || "If the account exists, a reset link has been sent.");
-      } else {
-        setPasswordError(data.message || "Unable to send reset email.");
-      }
-    } catch {
-      setPasswordError("Connection error. Please try again.");
-    } finally {
-      setIsSendingReset(false);
-    }
-  };
-
   const tabs: { id: ProfileTab; label: string }[] = [
     { id: "account", label: "Account" },
+    ...(isOAuthAccount ? [{ id: "oauth" as const, label: "OAuth sign-in" }] : []),
     { id: "security", label: "Two-factor auth" },
     ...(isOAuthAccount ? [] : [{ id: "password" as const, label: "Password" }]),
   ];
@@ -59,6 +39,11 @@ const ProfilePage = () => {
             <h1 className="text-3xl lg:text-4xl font-bold text-primary">ESTValgus</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3">
               <p className="text-sm text-slate-300">Signed in as {user.username}</p>
+              {isOAuthAccount && (
+                <span className="rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-xs font-semibold text-sky-300">
+                  {providerLabel} account
+                </span>
+              )}
               <span className="text-xs text-slate-500">· Account settings</span>
             </div>
           </div>
@@ -81,7 +66,7 @@ const ProfilePage = () => {
       </header>
 
       <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
-        <div className="flex gap-2 mb-6 border-b border-gray-800 pb-4">
+        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-800 pb-4">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -111,14 +96,53 @@ const ProfilePage = () => {
               </div>
               <div className="flex justify-between border-b border-gray-800 pb-3">
                 <span className="text-gray-400">Sign-in method</span>
-                <span className="capitalize">{user.oauthAccount ? user.provider ?? "Google" : "Email & password"}</span>
+                <span>{isOAuthAccount ? socialSignInLabel(user.provider) : "Email & password"}</span>
               </div>
             </div>
             <p className="text-sm text-gray-400">
               {isOAuthAccount
-                ? "Manage two-factor authentication in the Security tab."
+                ? `Open the OAuth sign-in tab for details about your ${providerLabel} account.`
                 : "Manage security and password options in the other tabs."}
             </p>
+          </div>
+        )}
+
+        {activeTab === "oauth" && isOAuthAccount && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-sky-500/30 bg-gradient-to-br from-sky-500/10 via-gray-900 to-gray-900 p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sky-400/40 bg-sky-400/10 text-xl">
+                  {user.provider === "facebook" ? "f" : "G"}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.2em] text-sky-300">OAuth sign-in</p>
+                  <h2 className="text-xl font-bold">{socialSignInLabel(user.provider)}</h2>
+                  <p className="text-sm text-gray-300">
+                    This ESTValgus account is linked to <span className="text-white">{user.email}</span> through{" "}
+                    {providerLabel}. You sign in with the {providerLabel} button on the login page — not an ESTValgus
+                    password.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
+              <h3 className="font-semibold text-amber-200">No password on this account</h3>
+              <ul className="text-sm text-gray-300 space-y-2 list-disc pl-5">
+                <li>There is no ESTValgus password to reset or change here.</li>
+                <li>Forgot password only applies to email &amp; password accounts.</li>
+                <li>To sign in again, use <strong className="text-white">{providerLabel}</strong> on the login page.</li>
+                <li>To change your {providerLabel} account password, use {providerLabel}&apos;s account settings — not ESTValgus.</li>
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700 transition"
+            >
+              Go to login
+            </button>
           </div>
         )}
 
@@ -129,28 +153,15 @@ const ProfilePage = () => {
             <h2 className="text-xl font-bold">Password</h2>
             <p className="text-sm text-gray-400">
               Reset your password via email. A link will be sent to{" "}
-              <span className="text-white">{user.email}</span> if the account exists.
+              <span className="text-white">{user.email}</span>.
             </p>
 
-            {passwordError && (
-              <StatusBanner variant="error" title="Unable to send reset email" message={passwordError} />
-            )}
-            {passwordMessage && (
-              <StatusBanner
-                variant="success"
-                title="Reset email sent"
-                message={passwordMessage}
-              />
-            )}
-
-            <button
-              type="button"
-              onClick={handlePasswordReset}
-              disabled={isSendingReset}
-              className="rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-60"
+            <Link
+              to="/forgot-password"
+              className="inline-flex rounded-lg bg-primary px-4 py-2 text-white hover:opacity-90 transition"
             >
-              {isSendingReset ? "Sending..." : "Send password reset email"}
-            </button>
+              Send password reset email
+            </Link>
 
             <p className="text-sm text-gray-500">
               Already have a reset link?{" "}

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
+import { socialSignInLabel } from "../utils/authProvider";
 import StatusBanner from "./StatusBanner";
 
 type TwoFactorStatus = "idle" | "enabled" | "disabled";
@@ -99,7 +100,7 @@ const SecuritySettings = () => {
         <h2 className="text-xl font-bold">Two-factor authentication</h2>
         <p className="text-sm text-gray-400 mt-1">
           {isOAuthAccount
-            ? `Signed in with ${user.provider ?? "Google"}. No ESTValgus password is required to manage 2FA.`
+            ? `${socialSignInLabel(user.provider)} — no ESTValgus password is required to manage 2FA.`
             : `Confirm your ESTValgus password to manage 2FA for ${user.email}.`}
         </p>
       </div>

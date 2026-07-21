@@ -305,7 +305,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
-    return response.json();
+
+    let data: AuthResponse;
+    try {
+      data = await response.json();
+    } catch {
+      return { success: false, message: "Unable to process request." };
+    }
+
+    if (!response.ok && data.success !== false) {
+      return { success: false, message: data.message || "Unable to process request." };
+    }
+
+    return data;
   };
 
   const resetPassword = async (resetToken: string, newPassword: string) => {

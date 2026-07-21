@@ -213,6 +213,38 @@ class AuthServiceTest {
     }
 
     @Test
+    void requestPasswordResetRejectsSocialSignInAccount() {
+        User user = buildUser();
+        user.setProvider("google");
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        AuthResponse response = authService.requestPasswordReset("user@example.com");
+
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("Google sign-in"));
+        verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString());
+        verify(passwordResetTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void loginRejectsSocialSignInAccountWithPasswordForm() {
+        User user = buildUser();
+        user.setProvider("google");
+        user.setPassword(passwordEncoder.encode("StrongP@ss1"));
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        AuthRequest request = new AuthRequest();
+        request.setEmail("user@example.com");
+        request.setPassword("StrongP@ss1");
+
+        AuthResponse response = authService.login(request);
+
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("Google sign-in"));
+    }
+
+    @Test
     void resetPasswordUpdatesUserPassword() {
         User user = buildUser();
         user.setPassword(passwordEncoder.encode("OldPass1!"));
@@ -284,6 +316,7 @@ class AuthServiceTest {
         user.setEmail("user@example.com");
         user.setUsername("user");
         user.setEnabled(true);
+        user.setPasswordLoginEnabled(true);
         return user;
     }
 }

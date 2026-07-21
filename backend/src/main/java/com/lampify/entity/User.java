@@ -29,6 +29,9 @@ public class User {
     @Column(nullable = true)
     private String provider;
 
+    @Column(name = "password_login_enabled", nullable = false)
+    private boolean passwordLoginEnabled = true;
+
     @Column(nullable = false)
     private boolean enabled = true;
 
