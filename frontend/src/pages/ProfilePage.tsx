@@ -102,8 +102,17 @@ const ProfilePage = () => {
             <p className="text-sm text-gray-400">
               {isOAuthAccount
                 ? `Open the OAuth sign-in tab for details about your ${providerLabel} account.`
-                : "Manage security and password options in the other tabs."}
+                : "This account uses email and password only. Google sign-in is not available for this address."}
             </p>
+            {!isOAuthAccount && (
+              <div className="rounded-lg border border-slate-600/40 bg-slate-800/40 p-4 text-sm text-gray-300">
+                <p className="font-semibold text-white">Email &amp; password sign-in</p>
+                <p className="mt-1">
+                  You created this account with an ESTValgus password. Sign in on the login page with your email and
+                  password, or use forgot password if needed. Google authentication is disabled for this account.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

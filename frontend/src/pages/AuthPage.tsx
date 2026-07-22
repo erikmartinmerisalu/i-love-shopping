@@ -186,11 +186,11 @@ const AuthPage = () => {
         setRequires2fa(true);
         setErrors({});
       } else {
-        setErrors({ email: data.message || "Google login failed" });
+        setErrors({ oauth: data.message || "Google login failed" });
       }
     } catch (error) {
       console.error("OAuth error:", error);
-      setErrors({ email: "OAuth login failed. Please try again." });
+      setErrors({ oauth: "Google login failed. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
@@ -344,8 +344,17 @@ const AuthPage = () => {
                   <SocialLoginButtons
                     disabled={isSubmitting}
                     onOAuthSuccess={handleOAuthSuccess}
-                    onOAuthError={(message) => setErrors({ email: message })}
+                    onOAuthError={(message) => setErrors({ oauth: message })}
                   />
+                  {errors.oauth && (
+                    <p className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                      {errors.oauth}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500">
+                    Google sign-in is only for accounts created with Google. If you registered with email and password,
+                    use the form below instead.
+                  </p>
 
                   <div className="flex items-center gap-3 text-sm text-slate-400">
                     <span className="h-px flex-1 bg-slate-700"></span>

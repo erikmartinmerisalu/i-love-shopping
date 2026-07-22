@@ -91,14 +91,22 @@ public class AuthService {
             return failure("Passwords do not match");
         }
 
-        if (userRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        Optional<User> existingUser = userRepository.findByEmail(normalizedEmail);
+        if (existingUser.isPresent()) {
+            User existing = existingUser.get();
+            if (!usesEmailPasswordLogin(existing)) {
+                return failure(formatSocialSignInMessage(existing.getProvider())
+                        + " Registration with email and password is not available for this address.");
+            }
             return failure("Email already registered");
         }
 
         User user = new User();
-        user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setEmail(normalizedEmail);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUsername(request.getEmail().split("@", 2)[0]);
+        user.setPasswordLoginEnabled(true);
         user.setEnabled(true);
         userRepository.save(user);
 
@@ -121,7 +129,7 @@ public class AuthService {
             return failure("Account disabled");
         }
 
-        if (!user.isPasswordLoginEnabled() || isSocialProvider(user.getProvider())) {
+        if (!usesEmailPasswordLogin(user)) {
             return failure(formatSocialSignInMessage(user.getProvider()));
         }
 
@@ -400,7 +408,20 @@ public class AuthService {
         final String normalizedEmail = email;
 
         Optional<User> userOptional = userRepository.findByEmail(normalizedEmail);
-        User user = userOptional.orElseGet(() -> {
+        User user;
+
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+            if (usesEmailPasswordLogin(user)) {
+                return failure("This account uses email and password sign-in. Use your password on the login form instead of "
+                        + formatAuthProviderName(provider) + ".");
+            }
+            if (isSocialProvider(user.getProvider()) && !user.getProvider().equalsIgnoreCase(provider)) {
+                return failure("This email is registered with "
+                        + formatAuthProviderName(user.getProvider())
+                        + " sign-in.");
+            }
+        } else {
             User created = new User();
             created.setEmail(normalizedEmail);
             created.setUsername(name != null && !name.isBlank() ? name : normalizedEmail.split("@", 2)[0]);
@@ -408,14 +429,7 @@ public class AuthService {
             created.setProvider(provider);
             created.setPasswordLoginEnabled(false);
             created.setEnabled(true);
-            return userRepository.save(created);
-        });
-
-        if (userOptional.isPresent() && isSocialProvider(user.getProvider())
-                && user.getProvider().equalsIgnoreCase(provider)
-                && user.isPasswordLoginEnabled()) {
-            user.setPasswordLoginEnabled(false);
-            userRepository.save(user);
+            user = userRepository.save(created);
         }
 
         if (user.isTwoFactorEnabled()) {
@@ -432,7 +446,7 @@ public class AuthService {
     }
 
     private boolean verifyPasswordIfRequired(User user, String password) {
-        if (!user.isPasswordLoginEnabled() || isSocialProvider(user.getProvider())) {
+        if (!usesEmailPasswordLogin(user)) {
             return true;
         }
         return password != null && !password.isBlank() && passwordEncoder.matches(password, user.getPassword());
@@ -442,14 +456,15 @@ public class AuthService {
         response.setEmail(user.getEmail());
         response.setUsername(user.getUsername());
         response.setProvider(user.getProvider());
-        response.setOauthAccount(isSocialProvider(user.getProvider()) || !user.isPasswordLoginEnabled());
+        response.setOauthAccount(!usesEmailPasswordLogin(user));
+    }
+
+    private boolean usesEmailPasswordLogin(User user) {
+        return user.isPasswordLoginEnabled() && !isSocialProvider(user.getProvider());
     }
 
     private boolean canResetPassword(User user) {
-        if (!user.isPasswordLoginEnabled()) {
-            return false;
-        }
-        return !isSocialProvider(user.getProvider());
+        return usesEmailPasswordLogin(user);
     }
 
     private boolean isSocialProvider(String provider) {
@@ -470,6 +485,17 @@ public class AuthService {
             case "google" -> "This account uses Google sign-in.";
             case "facebook" -> "This account uses Facebook sign-in.";
             default -> "This account uses " + provider + " sign-in.";
+        };
+    }
+
+    private String formatAuthProviderName(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return "social sign-in";
+        }
+        return switch (provider.toLowerCase()) {
+            case "google" -> "Google";
+            case "facebook" -> "Facebook";
+            default -> provider;
         };
     }
 

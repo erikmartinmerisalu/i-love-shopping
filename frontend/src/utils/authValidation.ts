@@ -4,6 +4,7 @@ export type AuthFieldErrors = {
   confirmPassword?: string;
   twoFactorCode?: string;
   captcha?: string;
+  oauth?: string;
 };
 
 export const isValidEmail = (email: string): boolean => {

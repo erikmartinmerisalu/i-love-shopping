@@ -107,12 +107,47 @@ class AuthServiceTest {
         request.setPassword("StrongP@ss1");
         request.setConfirmPassword("StrongP@ss1");
 
-        when(userRepository.existsByEmail("user@example.com")).thenReturn(true);
+        User existing = buildUser();
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
 
         AuthResponse response = authService.register(request);
 
         assertFalse(response.isSuccess());
         assertEquals("Email already registered", response.getMessage());
+    }
+
+    @Test
+    void registerRejectsExistingOAuthAccount() {
+        AuthRequest request = new AuthRequest();
+        request.setEmail("user@example.com");
+        request.setPassword("StrongP@ss1");
+        request.setConfirmPassword("StrongP@ss1");
+
+        User existing = buildUser();
+        existing.setProvider("google");
+        existing.setPasswordLoginEnabled(false);
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
+
+        AuthResponse response = authService.register(request);
+
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("Google sign-in"));
+    }
+
+    @Test
+    void oauthLoginRejectsExistingEmailPasswordAccount() {
+        User existing = buildUser();
+        existing.setPassword(passwordEncoder.encode("StrongP@ss1"));
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
+        when(oAuthValidator.isGoogleConfigured()).thenReturn(true);
+        when(oAuthValidator.validateGoogleToken("google-token")).thenReturn(
+                new OAuthTokenValidator.GoogleUserInfo("user@example.com", "User", null, "google-id"));
+
+        AuthResponse response = authService.oauthLogin("google", "google-token");
+
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("email and password"));
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -122,7 +157,7 @@ class AuthServiceTest {
         request.setPassword("StrongP@ss1");
         request.setConfirmPassword("StrongP@ss1");
 
-        when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
             user.setId(1L);
