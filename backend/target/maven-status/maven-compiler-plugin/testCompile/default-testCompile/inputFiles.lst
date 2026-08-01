@@ -1,0 +1,12 @@
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/AuthControllerTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/AuthIntegrationTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/AuthSecurityTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/CheckoutFlowIntegrationTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/OAuthEndpointSecurityTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/ProductCatalogIntegrationTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/controller/ProductCatalogSecurityTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/security/RateLimitingFilterTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/service/AuthServiceTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/service/CartServiceTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/service/OrderServiceTest.java
+/root/EstValgus/i-love-shopping/backend/src/test/java/com/lampify/service/ProductServiceTest.java

@@ -1,0 +1,20 @@
+# Ignore Maven and build artifacts
+/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Secrets — never commit
+.env
+frontend/.env.local
+
+# Dependencies
+node_modules/

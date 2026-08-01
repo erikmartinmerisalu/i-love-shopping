@@ -1,0 +1,253 @@
+================================================================================
+ESTValgus — Part 2/3 Commerce Plan (testing points only)
+================================================================================
+Created: 2026-07-28 | Updated: 2026-07-28
+Delete this file when Part 2/3 implementation and testing are finished.
+Part 1 (auth/catalog): see checking checklist.md — out of scope here except
+where reused (Docker, EmailService, existing registration tests).
+
+Legend: [DONE] [PARTIAL] [TODO] [EXPLAIN] = viva only, no code required
+
+Integrity note (2026-07-28): This file maps 1:1 to the Part 2/3 testing points
+you provided. Removed extras (address APIs, soft-reserve TTL designs, alternate
+queues, optional profile address tables, day estimates as requirements).
+
+================================================================================
+TESTING POINTS ↔ STATUS
+================================================================================
+
+--- Documentation & Docker (Extra) ---
+
+[DONE] README: overview, ERD, setup, usage for commerce
+  Have: overview, commerce ERD (V1-V13), Docker (incl. RabbitMQ), cart/checkout/orders/payment usage.
+
+[DONE] Docker: app + deps containerized; host = Docker (+ payment sim CLI later)
+  Have: docker-compose (postgres, rabbitmq, backend, frontend).
+
+--- Database ---
+
+[DONE] Schema for cart: guest carts + persistent carts for logged-in users
+  Have: V10 `carts` + `cart_items` (user_id XOR guest_token).
+  Have: V11 `orders` + `order_items` + `order_status_history`.
+  Have: payment_transactions + AES-GCM encryption at rest (Phase D).
+
+[DONE] Encrypt at rest: order details, shipping addresses, payment failure messages
+  Have: AES-GCM via APP_ENCRYPTION_SECRET; never store raw card data.
+
+--- Shopping cart ---
+
+[DONE] Cart shows name, price, thumbnail
+  Have: name, price, product image URL (fallback placeholder).
+
+[DONE] Add / remove / update qty + real-time totals
+  Have: API-backed cart with live totals.
+
+[DONE] Guest cart — temporary save for non-registered users
+  Have: HttpOnly `guestCartToken` cookie + DB guest cart.
+
+[DONE] Persistent cart — logged-in users, across sessions
+  Have: user-owned cart; merge guest→user on login / GET /cart / POST /cart/merge.
+
+[DONE] Out-of-stock handled gracefully when adding to cart
+  Have: disabled Add button; server messages "Out of stock" / "Only N left".
+
+--- Checkout ---
+
+[DONE] Single-page checkout
+  Have: CheckoutPage with contact, address, payment method, place order.
+
+[DONE] Collect basic info, address, payment selection
+  Have: form fields + STRIPE / PAYPAL / CARD selection (charge in Phase C).
+
+[DONE] Prefill known info for logged-in users
+  Have: email (readonly) + username as full name when empty.
+
+[DONE] Validate shipping address accuracy
+  Have: client + server rules for address/city/postal/country (+ email/phone).
+
+[DONE] Order summary (items, quantities, costs)
+  Have: checkout sidebar + confirmation summary.
+
+[DONE] Email confirmation after successful order
+  Have: EmailService.sendOrderConfirmationEmail (logs body if SMTP unset).
+
+[DONE] Checkout errors: missing required fields; invalid email/phone/address;
+      payment validation; network errors
+  Have: fieldErrors + banner; network message on fetch failure.
+  Note: live payment-decline errors arrive in Phase C.
+
+--- Payment ---
+
+[DONE] Stripe / PayPal / similar sandbox API
+  Have: Stripe PaymentIntent when keys set; CARD/PAYPAL local sandbox simulation otherwise.
+
+[DONE] Provider secure form elements (no card details on our servers)
+  Have: Stripe Elements / client-side collection; PAN never sent to app API.
+
+[DONE] Card validation: number format, expiry, CVV before submit
+  Have: provider elements and/or client checks - still no server card storage.
+
+[EXPLAIN] PCI DSS - why sensitive payment data must not be stored on app servers
+  See: testing/PCI_DSS_NOTES.md
+
+[DONE] Order status updates on payment provider callbacks (success / fail)
+  Have: Stripe webhooks + sandbox confirm paths update order status.
+
+[DONE] Payment system publishes status updates to a message queue
+  Have: RabbitMQ + Spring AMQP publish on payment success/fail.
+
+[DONE] Notification emails for successful and failed payments
+  Have: MQ consumer → EmailService (same smtp/mailjet path as C0).
+
+[DONE] Failure scenarios: insufficient funds; invalid card number; expired card;
+      payment gateway timeout
+  Have: sandbox decline / invalid / expired / timeout paths covered.
+
+[DONE] Inventory prevents overselling during concurrent payments
+      (multiple simultaneous payments for same product must not oversell)
+  Have: place-order lock + fail/restock lock guards.
+
+--- Orders ---
+
+[DONE] Filter/sort orders by date and order status
+  Have: order list filter/sort by date and status.
+
+[DONE] Order details page: full info including status updates
+  Have: order details with full info and status history.
+
+[DONE] Cancel unprocessed orders
+  Have: cancel for unprocessed orders.
+
+[DONE] Inventory updates stock when orders placed or cancelled
+  Have: stock decremented on place (pessimistic lock); restock on cancel.
+
+--- Testing ---
+
+[EXPLAIN] Explain testing approach: cart, checkout, payment integration
+
+[DONE] Unit tests: cart functionality, order calculations
+
+[DONE] Critical user flow tests: registration, checkout process
+      (registration already covered in Part 1; add checkout flow tests)
+
+[EXPLAIN] Explain and demonstrate the tests
+
+--- Extra (quality) — same scope, not new features ---
+
+[DONE] Cart quality, UX, persistence guest/logged-in
+  Have: thumbnails, stock messaging, guest cookie + user cart merge.
+
+[DONE] Checkout flow, error handling, guidance through payment
+  Have: checkout form errors + guidance; payment charge journey = Phase C.
+
+[DONE] Payment security, transaction handling, failure responses
+  Have: sandbox + Stripe failures; MQ publish + encryption at rest (Phase D).
+
+[DONE] Order management, status tracking, message queue
+  Have: filter/sort, details, cancel + restock; RabbitMQ notes (testing/RABBITMQ_NOTES.md).
+
+[DONE] Docker containerization (postgres + rabbitmq + backend + frontend)
+
+================================================================================
+IMPLEMENTATION PHASES (only what the points require)
+================================================================================
+
+PHASE A — Cart (schema + guest + persistent + OOS + thumbnails)
+  Maps to: DB cart schema; cart display; add/remove/qty/totals; guest cart;
+           persistent cart; out-of-stock; Extra cart quality/persistence.
+  A1. Thumbnail uses product image
+  A2. Guest cart temporary persistence (server guest token + cookie)
+  A3. Out-of-stock on add/update (clear messages)
+  A4. Flyway: carts + cart_items (guest_token / user_id)
+  A5. Cart API: get / add / update / remove; guest or authenticated
+  A6. Persistent user cart + merge guest → user on login
+  A7. Checkout button navigates to /checkout stub (enables Phase B page only;
+      stub is empty shell — not full checkout)
+
+PHASE B — Checkout page + order create + confirmation email
+  Maps to: single-page checkout; form fields; prefill; address validation;
+           order summary; order email; input/network error messages;
+           inventory update on place (start).
+  (Payment selection UI can be present; real charge = Phase C.)
+
+PHASE C — Payment sandbox + secure elements + failures + callbacks
+  Maps to: Stripe/PayPal sandbox; secure elements; card validation; PCI explain;
+           callbacks → order status; failure cases listed; concurrent oversell
+           prevention on payment.
+
+PHASE D — Message queue + payment emails + encryption at rest
+  Maps to: publish payment status to MQ; success/fail notification emails;
+           encrypt order details, shipping addresses, payment transaction records.
+
+PHASE E — Order management
+  Maps to: filter/sort by date & status; details + status updates; cancel
+           unprocessed; inventory update on cancel.
+
+PHASE F — Tests + README commerce update + viva demos
+  Maps to: unit (cart, order calculations); critical flows (registration,
+           checkout); explain/demonstrate tests; README overview/ERD/setup/usage
+           for commerce; Docker notes for payment CLI if used.
+
+================================================================================
+PHASE A — PROGRESS
+================================================================================
+[x] A1 Thumbnail
+[x] A2 Guest persistence
+[x] A3 Out-of-stock
+[x] A4 Migration carts/cart_items
+[x] A5 Cart API
+[x] A6 Merge on login + persistent cart
+[x] A7 /checkout stub route from Cart button
+
+================================================================================
+PHASE B — PROGRESS
+================================================================================
+[x] B1 Flyway orders / order_items / order_status_history
+[x] B2 Single-page checkout (contact, address, payment select, summary)
+[x] B3 Prefill email/name for logged-in users
+[x] B4 Client + server validation (required, email, phone, address) + network error
+[x] B5 POST /api/orders + stock decrement (SELECT FOR UPDATE)
+[x] B6 Order confirmation email
+[x] B7 Clear cart after successful place
+
+================================================================================
+PHASE C — PROGRESS
+================================================================================
+[x] C0 Order email shares EmailService path with forgot-password (smtp/mailjet)
+[x] C1 Stripe sandbox + CARD/PAYPAL simulation
+[x] C2 Secure Elements / client card validation (no PAN stored)
+[x] C3 Webhooks + sandbox confirm → order status
+[x] C4 Failure scenarios (funds / invalid / expired / timeout)
+[x] C5 Concurrent oversell guards (place lock + fail restock lock)
+[x] C6 PCI DSS notes (testing/PCI_DSS_NOTES.md)
+
+
+================================================================================
+PHASE D — PROGRESS
+================================================================================
+[x] D1 RabbitMQ in Docker + Spring AMQP publish on payment status
+[x] D2 Consumer sends success/fail payment emails (EmailService)
+[x] D3 Encrypt at rest: order details, shipping, payment failure messages
+[x] D4 Test card info box on payment step (copy-friendly sandbox cards)
+
+================================================================================
+PHASE E — PROGRESS
+================================================================================
+[x] E1 Filter/sort orders by date and status
+[x] E2 Order details page with status updates
+[x] E3 Cancel unprocessed orders
+[x] E4 Inventory restock on cancel
+[x] E5 RabbitMQ docs (testing/RABBITMQ_NOTES.md)
+
+
+================================================================================
+PHASE F - PROGRESS
+================================================================================
+[x] Unit tests cart + order calculations
+[x] Critical flow registration + checkout
+[x] README updated
+[x] Docs moved to testing/
+
+================================================================================
+END
+================================================================================
