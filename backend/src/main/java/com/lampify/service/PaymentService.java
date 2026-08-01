@@ -390,7 +390,13 @@ public class PaymentService {
         response.setSuccess("PAID".equals(orderDto.getStatus()));
         response.setPaymentStatus(tx != null ? tx.getStatus().name() : "UNKNOWN");
         response.setFailureCode(tx != null ? tx.getFailureCode() : null);
-        response.setMessage(response.isSuccess() ? "Payment succeeded" : "Payment not completed");
+        if (response.isSuccess()) {
+            response.setMessage("Payment succeeded");
+        } else if (tx != null && tx.getFailureMessage() != null && !tx.getFailureMessage().isBlank()) {
+            response.setMessage(userFacingFailureMessage(tx.getFailureCode(), tx.getFailureMessage()));
+        } else {
+            response.setMessage("Payment not completed");
+        }
         response.setOrder(orderDto);
         return response;
     }
@@ -410,6 +416,11 @@ public class PaymentService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         if (order.getStatus() == OrderStatus.PAID) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Order already paid");
+        }
+        if (order.getStatus() == OrderStatus.FAILED) {
+            orderService.reopenForPaymentRetry(orderNumber);
+            order = orderRepository.findByOrderNumberWithItems(orderNumber)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         }
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new ResponseStatusException(

@@ -47,6 +47,19 @@ const CheckoutPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<OrderDto | null>(null);
   const [paymentResult, setPaymentResult] = useState<PaymentResultResponse | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentSessionKey, setPaymentSessionKey] = useState(0);
+
+  const handlePaymentSuccess = (result: PaymentResultResponse) => {
+    setPaymentError(null);
+    setPaymentResult(result);
+  };
+
+  const handlePaymentFailed = (result: PaymentResultResponse) => {
+    const detail = result.failureCode ? `${result.message} (${result.failureCode})` : result.message;
+    setPaymentError(detail || 'Payment could not be completed. Please try again.');
+    setPaymentSessionKey((current) => current + 1);
+  };
 
   useEffect(() => {
     setForm((current) => ({
@@ -115,14 +128,11 @@ const CheckoutPage = () => {
     }
   };
 
-  if (paymentResult) {
-    const ok = paymentResult.success;
+  if (paymentResult?.success) {
     return (
       <div className="min-h-screen bg-gray-950 text-white">
         <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-wide">
-            {ok ? 'Payment successful' : 'Payment failed'}
-          </h1>
+          <h1 className="text-xl font-bold tracking-wide">Payment successful</h1>
           <button
             onClick={() => navigate('/products')}
             className="text-sm text-sky-300 hover:text-sky-200"
@@ -131,21 +141,12 @@ const CheckoutPage = () => {
           </button>
         </header>
         <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">
-          <div
-            className={`rounded-xl border p-5 ${
-              ok
-                ? 'border-green-500/40 bg-green-500/10 text-green-100'
-                : 'border-red-700 bg-red-900/40 text-red-100'
-            }`}
-          >
+          <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-5 text-green-100">
             <p className="font-semibold text-lg">{paymentResult.message}</p>
             <p className="mt-2 text-sm">
               Order <span className="font-mono">{paymentResult.orderNumber}</span> ·{' '}
               {paymentResult.orderStatus.replaceAll('_', ' ')}
             </p>
-            {paymentResult.failureCode && (
-              <p className="mt-2 text-sm opacity-90">Code: {paymentResult.failureCode}</p>
-            )}
           </div>
           {paymentResult.order && (
             <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-3">
@@ -194,10 +195,22 @@ const CheckoutPage = () => {
             Complete payment below — stock is reserved until payment succeeds or fails.
           </div>
 
+          {paymentError && (
+            <div className="rounded-xl border border-red-700 bg-red-900/40 px-4 py-3 text-sm text-red-200">
+              <p className="font-semibold">Payment failed</p>
+              <p className="mt-1">{paymentError}</p>
+              <p className="mt-2 text-xs text-red-300/90">
+                Correct your payment details and try again below — you stay on this page until payment
+                succeeds.
+              </p>
+            </div>
+          )}
+
           <PaymentStep
+            key={paymentSessionKey}
             order={placedOrder}
-            onPaid={setPaymentResult}
-            onFailed={setPaymentResult}
+            onPaid={handlePaymentSuccess}
+            onPaymentFailed={handlePaymentFailed}
           />
 
           <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-3">

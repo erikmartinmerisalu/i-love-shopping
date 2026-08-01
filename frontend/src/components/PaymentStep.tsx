@@ -20,7 +20,7 @@ import TestCardInfoBox from './TestCardInfoBox';
 type Props = {
   order: OrderDto;
   onPaid: (result: PaymentResultResponse) => void;
-  onFailed: (result: PaymentResultResponse) => void;
+  onPaymentFailed?: (result: PaymentResultResponse) => void;
 };
 
 const fieldClass = (hasError: boolean) =>
@@ -33,11 +33,11 @@ const fieldClass = (hasError: boolean) =>
 const StripeCheckoutForm = ({
   orderNumber,
   onPaid,
-  onFailed,
+  onPaymentFailed,
 }: {
   orderNumber: string;
   onPaid: (result: PaymentResultResponse) => void;
-  onFailed: (result: PaymentResultResponse) => void;
+  onPaymentFailed?: (result: PaymentResultResponse) => void;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -77,7 +77,9 @@ const StripeCheckoutForm = ({
       if (result.success) {
         onPaid(result);
       } else {
-        onFailed(result);
+        const message = result.message || 'Payment could not be completed';
+        setError(message);
+        onPaymentFailed?.(result);
       }
     } catch (err) {
       setError(err instanceof PaymentApiError ? err.message : 'Could not confirm payment status');
@@ -107,7 +109,7 @@ const StripeCheckoutForm = ({
   );
 };
 
-const PaymentStep = ({ order, onPaid, onFailed }: Props) => {
+const PaymentStep = ({ order, onPaid, onPaymentFailed }: Props) => {
   const [intent, setIntent] = useState<PaymentIntentResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -186,7 +188,8 @@ const PaymentStep = ({ order, onPaid, onFailed }: Props) => {
       if (result.success) {
         onPaid(result);
       } else {
-        onFailed(result);
+        setError(result.message || 'Payment could not be completed');
+        onPaymentFailed?.(result);
       }
     } catch (err) {
       setError(err instanceof PaymentApiError ? err.message : 'Payment failed');
@@ -224,7 +227,7 @@ const PaymentStep = ({ order, onPaid, onFailed }: Props) => {
           <StripeCheckoutForm
             orderNumber={order.orderNumber}
             onPaid={onPaid}
-            onFailed={onFailed}
+            onPaymentFailed={onPaymentFailed}
           />
         </Elements>
         <p className="text-xs text-gray-500">

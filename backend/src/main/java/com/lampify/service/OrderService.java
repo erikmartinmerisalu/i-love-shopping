@@ -345,8 +345,13 @@ public class OrderService {
         if (order.getStatus() == OrderStatus.PAID) {
             return toDto(order);
         }
-        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.FAILED) {
+        if (order.getStatus() == OrderStatus.CANCELLED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Order cannot be marked paid from status " + order.getStatus());
+        }
+        if (order.getStatus() == OrderStatus.FAILED) {
+            reopenForPaymentRetry(orderNumber);
+            order = orderRepository.findByOrderNumberWithItems(orderNumber)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         }
 
         order.setStatus(OrderStatus.PAID);
@@ -396,6 +401,55 @@ public class OrderService {
             note = failureCode + ": " + note;
         }
         history.setNote(note);
+        order.getStatusHistory().add(history);
+        return toDto(orderRepository.save(order));
+    }
+
+    /**
+     * Re-reserve stock and move a failed order back to awaiting payment so the customer can retry checkout.
+     */
+    @Transactional
+    public OrderDto reopenForPaymentRetry(String orderNumber) {
+        Order order = orderRepository.findByOrderNumberWithItems(orderNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (order.getStatus() == OrderStatus.PAID) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Order already paid");
+        }
+        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
+            return toDto(order);
+        }
+        if (order.getStatus() != OrderStatus.FAILED) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Order cannot be reopened for payment (status=" + order.getStatus() + ")");
+        }
+
+        for (OrderItem item : order.getItems()) {
+            if (item.getProduct() == null) {
+                continue;
+            }
+            Product product = productRepository.findByIdForUpdate(item.getProduct().getId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Product no longer available: " + item.getProductName()));
+
+            if (product.getStockQuantity() < item.getQuantity()) {
+                String message = product.getStockQuantity() <= 0
+                        ? product.getName() + " is out of stock"
+                        : "Only " + product.getStockQuantity() + " left in stock for " + product.getName();
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+            }
+
+            product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
+            productRepository.save(product);
+        }
+
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setStatus(OrderStatus.PENDING_PAYMENT);
+        history.setNote("Payment retry — stock re-reserved");
         order.getStatusHistory().add(history);
         return toDto(orderRepository.save(order));
     }
