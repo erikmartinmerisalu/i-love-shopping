@@ -361,4 +361,4 @@ Migrations: **V1-V13** (commerce: V10 carts, V11 orders, V12 payment_transaction
 |------|---------|
 | [example.env](example.env) | OAuth, reCAPTCHA, SMTP, Stripe, RabbitMQ, encryption template |
 | [docs/RECAPTCHA_SETUP.md](docs/RECAPTCHA_SETUP.md) | reCAPTCHA keys, localhost, and Render |
-| [testing/](testing/) | Viva / audit / Part 2 checklists - **not required to run the shop**; delete before submission if you want a lean hand-in |
+
