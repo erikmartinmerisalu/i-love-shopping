@@ -16,6 +16,7 @@ import {
   type CardFieldErrors,
 } from '../utils/cardValidation';
 import TestCardInfoBox from './TestCardInfoBox';
+import PayPalSandboxPanel from './PayPalSandboxPanel';
 
 type Props = {
   order: OrderDto;
@@ -238,11 +239,23 @@ const PaymentStep = ({ order, onPaid, onPaymentFailed }: Props) => {
     );
   }
 
+  if (intent.mode === 'sandbox' && intent.paymentMethod === 'PAYPAL') {
+    return (
+      <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-4">
+        <h2 className="text-lg font-semibold">Pay with PayPal</h2>
+        <PayPalSandboxPanel
+          orderNumber={order.orderNumber}
+          amount={intent.amount}
+          onPaid={onPaid}
+          onPaymentFailed={onPaymentFailed}
+        />
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-4">
-      <h2 className="text-lg font-semibold">
-        {intent.paymentMethod === 'PAYPAL' ? 'PayPal sandbox' : 'Secure card form'}
-      </h2>
+      <h2 className="text-lg font-semibold">Secure card form</h2>
       <p className="text-sm text-gray-400">
         Provider-style form: number, expiry, and CVV validated in the browser. Only a scenario
         token is sent to the API — card data is not stored on our servers.

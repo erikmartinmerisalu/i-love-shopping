@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchCartRecommendations, type CartRecommendationDto } from '../api/cart';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { resolveProductImageUrl } from '../utils/productImageUrl';
+import CustomDesign from '../assets/Custom_Design.png';
 
 interface CartProps {
   onClose?: () => void;
@@ -8,6 +12,7 @@ interface CartProps {
 
 const Cart: React.FC<CartProps> = ({ onClose }) => {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const {
     cartItems,
     removeFromCart,
@@ -15,9 +20,29 @@ const Cart: React.FC<CartProps> = ({ onClose }) => {
     totalPrice,
     clearCart,
     cartError,
+    addToCart,
   } = useCart();
   const [isOpen, setIsOpen] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<CartRecommendationDto[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (cartItems.length === 0) {
+        setRecommendations([]);
+        return;
+      }
+      const items = await fetchCartRecommendations(token, 4);
+      if (!cancelled) {
+        setRecommendations(items);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [cartItems, token]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -144,6 +169,34 @@ const Cart: React.FC<CartProps> = ({ onClose }) => {
           ))
         )}
       </div>
+
+      {recommendations.length > 0 && (
+        <div className="border-t border-gray-700 p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-200">You may also like</h3>
+          <div className="space-y-2">
+            {recommendations.map((item) => (
+              <div key={item.productId} className="flex items-center gap-3 rounded-lg bg-gray-800 p-2">
+                <img
+                  src={resolveProductImageUrl(item.imageUrl, CustomDesign)}
+                  alt={item.name}
+                  className="h-12 w-12 rounded object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-medium">{item.name}</p>
+                  <p className="text-xs text-primary">€{Number(item.price).toFixed(2)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void addToCart(item.productId, 1)}
+                  className="rounded bg-primary px-2 py-1 text-xs font-semibold hover:bg-primary-focus"
+                >
+                  Add
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {cartItems.length > 0 && (
         <div className="border-t border-gray-700 p-6 space-y-3">

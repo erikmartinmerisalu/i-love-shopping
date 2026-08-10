@@ -64,8 +64,8 @@ const OrdersPage = () => {
         </header>
         <main className="max-w-3xl mx-auto px-6 py-10">
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-100 text-sm">
-            Order history requires a logged-in account. Guests can open a specific order from the
-            confirmation email using the order number.
+            Order history requires a logged-in account. After a successful payment, guests receive a
+            confirmation email with the order number.
           </div>
           <button
             onClick={() => navigate('/login')}

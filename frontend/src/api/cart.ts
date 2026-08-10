@@ -27,6 +27,30 @@ async function parseCartResponse(response: Response): Promise<CartDto> {
   return data as CartDto;
 }
 
+export type CartRecommendationDto = {
+  productId: number;
+  name: string;
+  price: number;
+  imageUrl: string | null;
+  stockQuantity: number;
+};
+
+export async function fetchCartRecommendations(
+  accessToken: string | null,
+  limit = 4
+): Promise<CartRecommendationDto[]> {
+  const response = await fetch(`/api/cart/recommendations?limit=${limit}`, {
+    method: 'GET',
+    headers: cartHeaders(accessToken),
+    credentials: 'include',
+  });
+  const data = await response.json().catch(() => []);
+  if (!response.ok) {
+    return [];
+  }
+  return data as CartRecommendationDto[];
+}
+
 export async function fetchCart(accessToken: string | null): Promise<CartDto> {
   const response = await fetch('/api/cart', {
     method: 'GET',

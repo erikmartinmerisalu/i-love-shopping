@@ -3,6 +3,7 @@ package com.lampify.service;
 import com.lampify.dto.AddToCartRequest;
 import com.lampify.dto.CartDto;
 import com.lampify.dto.CartItemDto;
+import com.lampify.dto.CartRecommendationDto;
 import com.lampify.dto.UpdateCartItemRequest;
 import com.lampify.entity.Cart;
 import com.lampify.entity.CartItem;
@@ -14,13 +15,17 @@ import com.lampify.repository.CartRepository;
 import com.lampify.repository.ProductRepository;
 import com.lampify.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -70,6 +75,51 @@ public class CartService {
         String token = UUID.randomUUID().toString().replace("-", "");
         Cart cart = createGuestCart(token);
         return new CartResult(toDto(cart, true), Optional.of(token), false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CartRecommendationDto> getRecommendations(String userEmail, String guestToken, int limit) {
+        CartResult cartResult = getCart(userEmail, guestToken);
+        List<Long> excludeIds = cartResult.cart().getItems().stream()
+                .map(CartItemDto::getProductId)
+                .toList();
+        List<Long> exclude = excludeIds.isEmpty() ? List.of(-1L) : excludeIds;
+        int cappedLimit = Math.min(Math.max(limit, 1), 12);
+        PageRequest page = PageRequest.of(0, cappedLimit);
+
+        Set<Long> categoryIds = new HashSet<>();
+        if (userEmail != null) {
+            User user = userRepository.findByEmail(userEmail).orElse(null);
+            if (user != null) {
+                cartRepository.findByUserIdWithItems(user.getId()).ifPresent(cart ->
+                        cart.getItems().forEach(item -> addCategoryId(categoryIds, item)));
+            }
+        } else if (guestToken != null && !guestToken.isBlank()) {
+            cartRepository.findByGuestTokenWithItems(guestToken).ifPresent(cart ->
+                    cart.getItems().forEach(item -> addCategoryId(categoryIds, item)));
+        }
+
+        List<Product> products = categoryIds.isEmpty()
+                ? productRepository.findPopularExcluding(exclude, page)
+                : productRepository.findRecommendationsByCategoryIds(categoryIds, exclude, page);
+
+        return products.stream().map(this::toRecommendationDto).toList();
+    }
+
+    private void addCategoryId(Set<Long> categoryIds, CartItem item) {
+        if (item.getProduct() != null && item.getProduct().getCategory() != null) {
+            categoryIds.add(item.getProduct().getCategory().getId());
+        }
+    }
+
+    private CartRecommendationDto toRecommendationDto(Product product) {
+        CartRecommendationDto dto = new CartRecommendationDto();
+        dto.setProductId(product.getId());
+        dto.setName(product.getName());
+        dto.setPrice(product.getPrice());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setImageUrl(resolvePrimaryImage(product));
+        return dto;
     }
 
     @Transactional

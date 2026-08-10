@@ -10,6 +10,7 @@ import com.lampify.entity.OrderItem;
 import com.lampify.entity.OrderStatus;
 import com.lampify.entity.PaymentMethod;
 import com.lampify.entity.Product;
+import com.lampify.entity.User;
 import com.lampify.repository.CartRepository;
 import com.lampify.repository.OrderRepository;
 import com.lampify.repository.ProductRepository;
@@ -117,9 +118,67 @@ class OrderServiceTest {
         assertEquals(OrderStatus.PENDING_PAYMENT.name(), dto.getStatus());
         assertEquals(8, productA.getStockQuantity());
         assertEquals(9, productB.getStockQuantity());
-        verify(emailService).sendOrderConfirmationEmail(any(Order.class));
+        verify(emailService, never()).sendOrderConfirmationEmail(any(Order.class));
         verify(cartRepository).save(guestCart);
         assertTrue(guestCart.getItems().isEmpty());
+    }
+
+    @Test
+    void markPaymentSucceededSendsConfirmationEmail() {
+        Order order = new Order();
+        order.setId(7L);
+        order.setOrderNumber("EV-TESTORDER1");
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setEmail("buyer@example.com");
+        order.setPaymentMethod(PaymentMethod.CARD);
+        order.setItems(new ArrayList<>());
+        order.setStatusHistory(new ArrayList<>());
+
+        when(orderRepository.findByOrderNumberWithItems("EV-TESTORDER1")).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderDto result = orderService.markPaymentSucceeded("EV-TESTORDER1", "Sandbox payment");
+
+        assertEquals(OrderStatus.PAID.name(), result.getStatus());
+        verify(emailService).sendOrderConfirmationEmail(order);
+    }
+
+    @Test
+    void cancelOrderAllowsLoggedInUserWhenCheckoutEmailMatches() {
+        Order order = new Order();
+        order.setId(7L);
+        order.setOrderNumber("EV-TESTORDER1");
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setEmail("buyer@example.com");
+        order.setPaymentMethod(PaymentMethod.PAYPAL);
+        order.setItems(new ArrayList<>());
+        order.setStatusHistory(new ArrayList<>());
+
+        when(orderRepository.findByOrderNumberWithItems("EV-TESTORDER1")).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderDto result = orderService.cancelOrder("EV-TESTORDER1", "buyer@example.com", null);
+
+        assertEquals(OrderStatus.CANCELLED.name(), result.getStatus());
+    }
+
+    @Test
+    void cancelOrderAllowsEmailHintEvenWhenLoggedIn() {
+        Order order = new Order();
+        order.setId(8L);
+        order.setOrderNumber("EV-TESTORDER2");
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setEmail("buyer@example.com");
+        order.setPaymentMethod(PaymentMethod.PAYPAL);
+        order.setItems(new ArrayList<>());
+        order.setStatusHistory(new ArrayList<>());
+
+        when(orderRepository.findByOrderNumberWithItems("EV-TESTORDER2")).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderDto result = orderService.cancelOrder("EV-TESTORDER2", "other@example.com", "buyer@example.com");
+
+        assertEquals(OrderStatus.CANCELLED.name(), result.getStatus());
     }
 
     @Test

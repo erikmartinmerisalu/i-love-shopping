@@ -147,6 +147,12 @@ const CheckoutPage = () => {
               Order <span className="font-mono">{paymentResult.orderNumber}</span> ·{' '}
               {paymentResult.orderStatus.replaceAll('_', ' ')}
             </p>
+            {paymentResult.order?.email && (
+              <p className="mt-2 text-sm">
+                A confirmation email has been sent to{' '}
+                <span className="font-medium">{paymentResult.order.email}</span>.
+              </p>
+            )}
           </div>
           {paymentResult.order && (
             <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-3">
@@ -190,9 +196,9 @@ const CheckoutPage = () => {
         </header>
         <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">
           <div className="rounded-xl border border-sky-500/40 bg-sky-500/10 p-5 text-sky-100 text-sm">
-            Order <span className="font-mono font-semibold">{placedOrder.orderNumber}</span> created
-            · confirmation email sent to {placedOrder.email} (same mail provider as password reset).
-            Complete payment below — stock is reserved until payment succeeds or fails.
+            Order <span className="font-mono font-semibold">{placedOrder.orderNumber}</span> is ready
+            for payment. Complete payment below — stock is reserved until payment succeeds or fails. A
+            confirmation email will be sent to {placedOrder.email} once payment succeeds.
           </div>
 
           {paymentError && (
@@ -378,7 +384,8 @@ const CheckoutPage = () => {
             <h2 className="text-lg font-semibold">Payment method</h2>
             <p className="text-xs text-gray-400">
               After placing the order you will complete payment on a secure form. Stripe uses
-              provider Elements when keys are set; otherwise CARD/PAYPAL use the local sandbox.
+              provider Elements when keys are set. CARD uses the test-card sandbox. PayPal uses a
+              separate sandbox approval flow — no card details required.
             </p>
             <div className="space-y-2">
               {PAYMENT_OPTIONS.map((option) => (

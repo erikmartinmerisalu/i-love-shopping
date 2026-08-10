@@ -23,9 +23,8 @@ public class PaymentNotificationListener {
     @RabbitListener(queues = RabbitConfig.PAYMENT_QUEUE)
     public void onPaymentStatus(PaymentStatusEvent event) {
         log.info("Received payment status for {} success={}", event.orderNumber(), event.success());
-        if (event.success()) {
-            emailService.sendPaymentSuccessEmail(event);
-        } else {
+        // Order confirmation email is sent synchronously when payment succeeds (OrderService).
+        if (!event.success()) {
             emailService.sendPaymentFailedEmail(event);
         }
     }

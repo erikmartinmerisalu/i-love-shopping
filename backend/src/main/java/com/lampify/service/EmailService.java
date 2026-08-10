@@ -80,7 +80,7 @@ public class EmailService {
                         .append(item.getLineTotal())
                         .append("\n"));
         body.append("\nTotal: €").append(order.getTotalAmount()).append("\n")
-                .append("\nPayment processing will complete in the next step of checkout.\n");
+                .append("\nYour payment was successful. Thank you for shopping with ESTValgus.\n");
 
         sendEmail(order.getEmail(), subject, body.toString(), "order confirmation");
     }

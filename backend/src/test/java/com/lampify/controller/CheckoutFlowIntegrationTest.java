@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lampify.entity.Category;
 import com.lampify.entity.Product;
 import com.lampify.repository.CategoryRepository;
+import com.lampify.repository.OrderRepository;
 import com.lampify.repository.ProductRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,10 +49,14 @@ class CheckoutFlowIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
     private Product product;
 
     @BeforeEach
     void seedProduct() {
+        orderRepository.deleteAll();
         productRepository.deleteAll();
         categoryRepository.deleteAll();
 
@@ -170,6 +175,50 @@ class CheckoutFlowIntegrationTest {
         mockMvc.perform(get("/cart").cookie(guestCartCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(0));
+    }
+
+    @Test
+    void guestCanCancelPendingOrderWithCheckoutEmail() throws Exception {
+        MvcResult cartResult = mockMvc.perform(post("/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "productId": %d, "quantity": 1 }
+                                """.formatted(product.getId())))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie guestCartCookie = extractGuestCartCookie(cartResult.getResponse());
+        String email = "cancel.guest@example.com";
+
+        MvcResult orderResult = mockMvc.perform(post("/orders")
+                        .cookie(guestCartCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullName": "Cancel Guest",
+                                  "email": "%s",
+                                  "phone": "+37255551234",
+                                  "addressLine1": "Test Street 1",
+                                  "city": "Tallinn",
+                                  "postalCode": "10111",
+                                  "country": "Estonia",
+                                  "paymentMethod": "CARD"
+                                }
+                                """.formatted(email)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String orderNumber = objectMapper.readTree(orderResult.getResponse().getContentAsString())
+                .path("orderNumber")
+                .asText();
+
+        mockMvc.perform(post("/orders/" + orderNumber + "/cancel")
+                        .param("email", email))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        Product afterCancel = productRepository.findById(product.getId()).orElseThrow();
+        assertEquals(5, afterCancel.getStockQuantity());
     }
 
     @Test

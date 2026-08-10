@@ -89,7 +89,7 @@ public class PaymentService {
         String providerId = "sandbox_" + UUID.randomUUID().toString().replace("-", "");
         PaymentTransaction tx = new PaymentTransaction();
         tx.setOrder(order);
-        tx.setProvider("PAYPAL".equals(order.getPaymentMethod().name()) ? "PAYPAL_SANDBOX" : "CARD_SANDBOX");
+        tx.setProvider(sandboxProviderFor(order));
         tx.setProviderPaymentId(providerId);
         tx.setStatus(PaymentTransactionStatus.REQUIRES_PAYMENT);
         tx.setAmount(order.getTotalAmount());
@@ -117,7 +117,7 @@ public class PaymentService {
                 .orElseGet(() -> {
                     PaymentTransaction created = new PaymentTransaction();
                     created.setOrder(order);
-                    created.setProvider("CARD_SANDBOX");
+                    created.setProvider(sandboxProviderFor(order));
                     created.setProviderPaymentId("sandbox_" + UUID.randomUUID().toString().replace("-", ""));
                     created.setStatus(PaymentTransactionStatus.REQUIRES_PAYMENT);
                     created.setAmount(order.getTotalAmount());
@@ -428,5 +428,9 @@ public class PaymentService {
                     "Order is not awaiting payment (status=" + order.getStatus() + ")");
         }
         return order;
+    }
+
+    private String sandboxProviderFor(Order order) {
+        return "PAYPAL".equals(order.getPaymentMethod().name()) ? "PAYPAL_SANDBOX" : "CARD_SANDBOX";
     }
 }

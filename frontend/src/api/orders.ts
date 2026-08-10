@@ -132,11 +132,12 @@ export async function fetchOrder(
   email?: string
 ): Promise<OrderDto> {
   const query = email ? `?email=${encodeURIComponent(email)}` : '';
+  const useEmailVerification = !!email;
   let response: Response;
   try {
     response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}${query}`, {
       headers: {
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(accessToken && !useEmailVerification ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       credentials: 'include',
     });
@@ -159,12 +160,13 @@ export async function cancelOrder(
   email?: string
 ): Promise<OrderDto> {
   const query = email ? `?email=${encodeURIComponent(email)}` : '';
+  const useEmailVerification = !!email;
   let response: Response;
   try {
     response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}/cancel${query}`, {
       method: 'POST',
       headers: {
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(accessToken && !useEmailVerification ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       credentials: 'include',
     });

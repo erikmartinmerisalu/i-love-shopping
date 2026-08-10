@@ -1,5 +1,6 @@
 # Ignore Maven and build artifacts
 /target/
+backend/target/
 
 # Frontend
 frontend/node_modules/

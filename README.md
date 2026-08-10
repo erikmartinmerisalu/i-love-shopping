@@ -1,6 +1,6 @@
 # ESTValgus
 
-B2C lighting shop built for a coursework/viva project. Customers browse a product catalog, filter and sort results, and use a **server-backed cart**. Accounts support email/password login, Google OAuth, optional 2FA, and password reset. Checkout creates orders; payments use Stripe sandbox when keys are set, otherwise CARD/PAYPAL local sandbox scenarios.
+B2C lighting shop. Customers browse a product catalog, filter and sort results, and use a **server-backed cart**. Accounts support email/password login, Google OAuth, optional 2FA, and password reset. Checkout creates orders; payments use Stripe sandbox when keys are set, otherwise CARD/PAYPAL local sandbox scenarios.
 
 **Stack:** React (Vite) + Spring Boot + PostgreSQL + RabbitMQ, packaged with Docker Compose.
 
@@ -25,7 +25,41 @@ B2C lighting shop built for a coursework/viva project. Customers browse a produc
 | Stripe sandbox + CARD/PAYPAL sandbox scenarios | Done |
 | RabbitMQ payment status to notification emails | Done (when `APP_MESSAGING_ENABLED`) |
 | AES-GCM field encryption at rest | Done (`APP_ENCRYPTION_SECRET`) |
-| Automated backend tests | 52 (`mvn test`) |
+| Automated backend tests | 52+ (`mvn test`) |
+
+---
+
+## Project 2 (Commerce) — requirement coverage
+
+| Area | Requirement | Status |
+|------|-------------|--------|
+| **Cart** | Name, price, thumbnail per item | Done — `Cart.tsx`, `CartService` |
+| **Cart** | Add / remove / update qty, live totals | Done — `CartContext`, `/api/cart` |
+| **Cart** | Guest cart (cookie + DB) | Done — `guestCartToken` httpOnly cookie |
+| **Cart** | Persistent logged-in cart | Done — user-owned cart, merge on login |
+| **Cart** | Related / recommended products | Done — `GET /api/cart/recommendations` |
+| **Checkout** | Single-page flow (form → pay → confirm) | Done — `/checkout` |
+| **Checkout** | Address + payment method + validation | Done — client + `OrderService.validateCheckout` |
+| **Checkout** | Prefill for logged-in users | Partial — email/name; no saved address book |
+| **Checkout** | Shipping options | Partial — standard shipping included in product price |
+| **Checkout** | Order summary at checkout | Done — read-only summary; edit in cart drawer |
+| **Checkout** | Confirmation page + email on payment success | Done — `CheckoutPage`, `EmailService` |
+| **Payments** | Stripe / PayPal sandbox simulation | Done — Stripe Elements + CARD/PayPal sandbox |
+| **Payments** | No card data stored server-side | Done — Stripe Elements / scenario tokens only |
+| **Payments** | Front-end card validation | Done — `cardValidation.ts` (Luhn, expiry, CVV) |
+| **Payments** | Order status ↔ payment status | Done — `PENDING_PAYMENT` → `PAID` / `FAILED` |
+| **Payments** | RabbitMQ payment events | Done — `PaymentEventPublisher`, `PaymentNotificationListener` |
+| **Payments** | Email + inventory on pay/fail/cancel | Done — stock reserve/restock in `OrderService` |
+| **Payments** | Failure scenarios | Done — insufficient funds, invalid card, expired, timeout |
+| **Orders** | Filter by status, sort by date | Done — `OrdersPage` |
+| **Orders** | Detail view + status history | Done — `OrderDetailPage` |
+| **Orders** | Cancel before processing | Done — `PENDING_PAYMENT` cancel restores stock |
+| **Orders** | Refund workflow after payment | Not implemented — cancel only before payment |
+| **Tests** | Cart + order unit tests | Done — `CartServiceTest`, `OrderServiceTest` |
+| **Tests** | Registration + checkout integration | Done — `CheckoutFlowIntegrationTest` |
+| **Docker** | One-step run | Done — `docker compose up --build` |
+
+**Security notes (theory):** card data never hits our DB; TLS terminates at nginx in Docker; order PII encrypted at rest (`APP_ENCRYPTION_SECRET`); PCI scope reduced via Stripe Elements / tokenized sandbox flows.
 
 ---
 
@@ -117,8 +151,6 @@ cd backend && mvn test
 | `ProductCatalogSecurityTest` | Security | Injection in search, public catalog access |
 | `OAuthEndpointSecurityTest` | Security | OAuth endpoint reachable without prior auth |
 | `AuthControllerTest` | API | Controller validation |
-
-Viva / testing checklists and notes live under [testing/](testing/) (safe to delete before submission).
 
 ---
 

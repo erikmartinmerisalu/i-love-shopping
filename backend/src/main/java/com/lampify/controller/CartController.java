@@ -3,6 +3,7 @@ package com.lampify.controller;
 import com.lampify.dto.AddToCartRequest;
 import com.lampify.dto.ApiErrorResponse;
 import com.lampify.dto.CartDto;
+import com.lampify.dto.CartRecommendationDto;
 import com.lampify.dto.UpdateCartItemRequest;
 import com.lampify.service.CartService;
 import jakarta.servlet.http.Cookie;
@@ -16,6 +17,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/cart")
@@ -46,6 +49,14 @@ public class CartController {
         CartService.CartResult result = cartService.getCart(currentUserEmail(), guestToken(request));
         applyCookieUpdates(response, result);
         return ResponseEntity.ok(result.cart());
+    }
+
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<CartRecommendationDto>> recommendations(
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "4") int limit) {
+        return ResponseEntity.ok(
+                cartService.getRecommendations(currentUserEmail(), guestToken(request), limit));
     }
 
     @PostMapping("/items")

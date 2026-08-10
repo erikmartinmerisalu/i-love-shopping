@@ -220,8 +220,6 @@ public class OrderService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
-        emailService.sendOrderConfirmationEmail(saved);
-
         return toDto(saved);
     }
 
@@ -290,6 +288,8 @@ public class OrderService {
                     "Only unprocessed orders (awaiting payment) can be cancelled");
         }
 
+        order.getStatusHistory().size();
+
         for (OrderItem item : order.getItems()) {
             if (item.getProduct() == null) {
                 continue;
@@ -314,23 +314,43 @@ public class OrderService {
     }
 
     private void assertCanView(Order order, String userEmail, String emailHint) {
+        if (matchesOrderEmail(order, emailHint)) {
+            return;
+        }
         if (userEmail != null) {
-            if (order.getUser() != null && userEmail.equalsIgnoreCase(order.getUser().getEmail())) {
+            if (matchesOrderEmail(order, userEmail)) {
                 return;
             }
-            if (order.getEmail() != null && userEmail.equalsIgnoreCase(order.getEmail())) {
-                return;
+            User viewer = userRepository.findByEmail(userEmail.trim()).orElse(null);
+            if (viewer != null) {
+                if (order.getUser() != null && viewer.getId().equals(order.getUser().getId())) {
+                    return;
+                }
+                Order linked = orderRepository.findByOrderNumberWithUser(order.getOrderNumber()).orElse(null);
+                if (linked != null && linked.getUser() != null && viewer.getId().equals(linked.getUser().getId())) {
+                    return;
+                }
             }
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this order");
-        }
-        if (emailHint != null && !emailHint.isBlank()
-                && order.getEmail() != null
-                && emailHint.trim().equalsIgnoreCase(order.getEmail())) {
-            return;
         }
         throw new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED,
                 "Login or provide the order email to view this order");
+    }
+
+    private boolean matchesOrderEmail(Order order, String email) {
+        String normalizedOrderEmail = normalizeEmail(order.getEmail());
+        String normalizedInput = normalizeEmail(email);
+        return normalizedInput != null
+                && normalizedOrderEmail != null
+                && normalizedInput.equals(normalizedOrderEmail);
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     /**
@@ -360,7 +380,9 @@ public class OrderService {
         history.setStatus(OrderStatus.PAID);
         history.setNote(note != null ? note : "Payment succeeded");
         order.getStatusHistory().add(history);
-        return toDto(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        emailService.sendOrderConfirmationEmail(saved);
+        return toDto(saved);
     }
 
     /**

@@ -30,11 +30,8 @@ const OrderDetailPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchOrder(
-        token,
-        orderNumber,
-        !isAuthenticated ? guestEmail || emailHint : undefined
-      );
+      const emailForAccess = guestEmail || emailHint;
+      const data = await fetchOrder(token, orderNumber, emailForAccess);
       setOrder(data);
     } catch (err) {
       setError(err instanceof CheckoutApiError ? err.message : 'Could not load order');
@@ -59,11 +56,7 @@ const OrderDetailPage = () => {
     setCancelling(true);
     setError(null);
     try {
-      const updated = await cancelOrder(
-        token,
-        order.orderNumber,
-        !isAuthenticated ? guestEmail || emailHint : undefined
-      );
+      const updated = await cancelOrder(token, order.orderNumber, order.email);
       setOrder(updated);
     } catch (err) {
       setError(err instanceof CheckoutApiError ? err.message : 'Could not cancel order');
