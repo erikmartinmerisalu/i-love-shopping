@@ -1,76 +1,19 @@
 # ESTValgus
 
-B2C lighting shop. Customers browse a product catalog, filter and sort results, and use a **server-backed cart**. Accounts support email/password login, Google OAuth, optional 2FA, and password reset. Checkout creates orders; payments use Stripe sandbox when keys are set, otherwise CARD/PAYPAL local sandbox scenarios.
+B2C lighting shop with a server-backed shopping cart, checkout, sandbox payments (Stripe / CARD / PayPal simulation), and order management. Also includes account features (email login, Google OAuth, 2FA, password reset).
 
-**Stack:** React (Vite) + Spring Boot + PostgreSQL + RabbitMQ, packaged with Docker Compose.
-
----
-
-## What is implemented
-
-| Area | Status |
-|------|--------|
-| B2C storefront (browse, search, cart) | Done |
-| Email/password auth | Done |
-| Google OAuth | Done (needs Google Client ID in `.env`) |
-| reCAPTCHA v3 on registration | Done (skipped if keys are empty) |
-| JWT access token in memory + httpOnly refresh cookie | Done |
-| Refresh token rotation (single-use) | Done |
-| Access + refresh revocation on logout | Done |
-| Password reset flow | Done (real email only if SMTP is configured) |
-| TOTP 2FA (QR, backup codes) | Done |
-| Product API: search, facets, sort, images | Done |
-| Cart (guest cookie + logged-in carts, merge on login) | Done |
-| Checkout / orders / payments | Done |
-| Stripe sandbox + CARD/PAYPAL sandbox scenarios | Done |
-| RabbitMQ payment status to notification emails | Done (when `APP_MESSAGING_ENABLED`) |
-| AES-GCM field encryption at rest | Done (`APP_ENCRYPTION_SECRET`) |
-| Automated backend tests | 52+ (`mvn test`) |
+**Stack:** React (Vite) + Spring Boot + PostgreSQL + RabbitMQ, run with Docker Compose.
 
 ---
 
-## Project 2 (Commerce) — requirement coverage
+## Setup
 
-| Area | Requirement | Status |
-|------|-------------|--------|
-| **Cart** | Name, price, thumbnail per item | Done — `Cart.tsx`, `CartService` |
-| **Cart** | Add / remove / update qty, live totals | Done — `CartContext`, `/api/cart` |
-| **Cart** | Guest cart (cookie + DB) | Done — `guestCartToken` httpOnly cookie |
-| **Cart** | Persistent logged-in cart | Done — user-owned cart, merge on login |
-| **Cart** | Related / recommended products | Done — `GET /api/cart/recommendations` |
-| **Checkout** | Single-page flow (form → pay → confirm) | Done — `/checkout` |
-| **Checkout** | Address + payment method + validation | Done — client + `OrderService.validateCheckout` |
-| **Checkout** | Prefill for logged-in users | Partial — email/name; no saved address book |
-| **Checkout** | Shipping options | Partial — standard shipping included in product price |
-| **Checkout** | Order summary at checkout | Done — read-only summary; edit in cart drawer |
-| **Checkout** | Confirmation page + email on payment success | Done — `CheckoutPage`, `EmailService` |
-| **Payments** | Stripe / PayPal sandbox simulation | Done — Stripe Elements + CARD/PayPal sandbox |
-| **Payments** | No card data stored server-side | Done — Stripe Elements / scenario tokens only |
-| **Payments** | Front-end card validation | Done — `cardValidation.ts` (Luhn, expiry, CVV) |
-| **Payments** | Order status ↔ payment status | Done — `PENDING_PAYMENT` → `PAID` / `FAILED` |
-| **Payments** | RabbitMQ payment events | Done — `PaymentEventPublisher`, `PaymentNotificationListener` |
-| **Payments** | Email + inventory on pay/fail/cancel | Done — stock reserve/restock in `OrderService` |
-| **Payments** | Failure scenarios | Done — insufficient funds, invalid card, expired, timeout |
-| **Orders** | Filter by status, sort by date | Done — `OrdersPage` |
-| **Orders** | Detail view + status history | Done — `OrderDetailPage` |
-| **Orders** | Cancel before processing | Done — `PENDING_PAYMENT` cancel restores stock |
-| **Orders** | Refund workflow after payment | Not implemented — cancel only before payment |
-| **Tests** | Cart + order unit tests | Done — `CartServiceTest`, `OrderServiceTest` |
-| **Tests** | Registration + checkout integration | Done — `CheckoutFlowIntegrationTest` |
-| **Docker** | One-step run | Done — `docker compose up --build` |
-
-**Security notes (theory):** card data never hits our DB; TLS terminates at nginx in Docker; order PII encrypted at rest (`APP_ENCRYPTION_SECRET`); PCI scope reduced via Stripe Elements / tokenized sandbox flows.
-
----
-
-## Run with Docker
-
-You only need Docker installed on the host.
+**Prerequisites:** Docker (and Docker Compose). Optional: Stripe CLI for webhook testing.
 
 ```bash
 git clone <repo>
-cd projects   # repository root
-cp example.env .env          # optional: Google OAuth, reCAPTCHA, SMTP, Stripe, RabbitMQ
+cd projects
+cp example.env .env    # optional: OAuth, SMTP, Stripe keys
 docker compose up --build
 ```
 
@@ -78,60 +21,51 @@ docker compose up --build
 |---------|-----|
 | Shop | http://localhost:3000 |
 | API | http://localhost:8080/api |
-| Database | `localhost:5432`, db `lampify_db`, user/pass `postgres` |
-| RabbitMQ UI | http://localhost:15672 (default `guest` / `guest`) |
+| RabbitMQ UI | http://localhost:15672 (`guest` / `guest`) |
 
-Stop: `docker compose down`  
-Reset DB + uploads: `docker compose down -v`
+Stop: `docker compose down` · Reset data: `docker compose down -v`
 
-Rebuild after changing `VITE_*` build args: `docker compose up --build`
-
-### Local dev (without full Docker stack)
-
-```bash
-cd backend && docker compose up -d postgres
-cd backend && mvn spring-boot:run
-cd frontend && npm install && npm run dev   # http://localhost:5173
-```
-
-The backend loads `GOOGLE_CLIENT_ID` from the root `.env` when you run Maven locally. For payment emails and MQ locally, also run RabbitMQ (or use the compose `rabbitmq` service) and set `APP_MESSAGING_ENABLED` / mail vars as in `example.env`.
+**Local dev:** run Postgres (or full compose stack), then `cd backend && mvn spring-boot:run` and `cd frontend && npm install && npm run dev` (http://localhost:5173). See [example.env](example.env) for variables.
 
 ---
 
 ## Usage
 
-### Register and log in
+### Shopping cart
 
-1. Open the shop (port 3000 or 5173 in dev).
-2. **Register** with a strong password (8+ chars, upper, lower, digit, special). reCAPTCHA runs when keys are set.
-3. **Log in** - access token stays in a JavaScript variable; refresh token is an httpOnly cookie.
-4. **Google login** - configure `VITE_GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_ID` (see `example.env`).
-5. **Forgot password** - triggers reset token; without SMTP the link is printed in the **backend log** (look for `Mail not configured. Password reset link for ...`).
-6. **2FA** - Profile then **Two-factor auth** then generate QR then verify with authenticator app. Google accounts skip the password step.
+- Open the cart from the shop header. Each line shows **name, price, thumbnail**, quantity controls, and line subtotal.
+- **Guests:** cart stored in PostgreSQL, keyed by httpOnly `guestCartToken` cookie.
+- **Logged-in users:** persistent user cart; guest cart **merges on login**.
+- **Recommendations:** “You may also like” suggestions based on cart categories.
+- Out-of-stock adds/updates return clear API errors (no silent failures).
 
-### Catalog
+### Checkout
 
-- Search bar (debounced) matches name, description, brand.
-- Sidebar: category, brand, price range.
-- Sort: relevance, price, rating, name.
+Single route `/checkout`:
 
-### Cart, checkout, orders, payments
+1. Contact, shipping address, payment method (STRIPE / CARD / PAYPAL sandbox).
+2. Place order → pay on the same page (no redirect on failure; errors shown inline).
+3. Success → confirmation view; **confirmation email sent after payment succeeds**.
 
-- **Cart** persists via the API (not browser-only). Guests get an httpOnly `guestCartToken` cookie; logged-in users have a user-owned cart. Guest and user carts **merge on login**.
-- **Checkout** at `/checkout`: contact, shipping address, payment method, and order summary.
-- **Payments:** Stripe Elements when Stripe keys are set; otherwise CARD/PAYPAL **sandbox** scenarios with a test-card info box on the payment step.
-- **Orders** page: list with filter/sort, order detail (including status history), cancel when status is `PENDING_PAYMENT` (restocks inventory).
-- **RabbitMQ:** payment success/fail publishes to the queue; a consumer sends notification emails when `APP_MESSAGING_ENABLED` is true. Management UI: http://localhost:15672.
-- **Emails** (order confirmation, payment success/fail, password reset) share the same `MAIL_*` / `EmailService` path.
+Logged-in users get **email and name prefilled**. Address and payment fields are validated on the client and server.
 
-### API samples
+**Sandbox test cards** (CARD mode): `4242…` success, `4000…9995` insufficient funds, `4000…0002` invalid, `4000…0069` expired, `4000…0010` timeout. PayPal sandbox uses approve/decline buttons (no card form).
 
-```bash
-curl "http://localhost:8080/api/products?search=bulb&sort=price_asc"
-curl http://localhost:8080/api/categories
-```
+### Orders & payments
 
-### Tests
+- **Orders** (`/orders`): filter by status, sort by date; detail page with status history.
+- **Cancel** unprocessed orders (`PENDING_PAYMENT`) — stock is restored.
+- **Payments:** Stripe Elements when keys are set; otherwise local sandbox. Card data never stored on the server.
+- **RabbitMQ:** payment events published to a queue; consumer sends failure notification emails (`APP_MESSAGING_ENABLED`).
+- **Inventory:** stock reserved at place-order (`SELECT … FOR UPDATE`); restored on payment failure or cancel; re-reserved on retry.
+
+### Auth (summary)
+
+Register / login, Google OAuth, forgot password, optional 2FA under Profile. JWT access token in memory; refresh token in httpOnly cookie.
+
+---
+
+## Tests
 
 ```bash
 cd backend && mvn test
@@ -139,139 +73,41 @@ cd backend && mvn test
 
 | Test class | Type | What it checks |
 |------------|------|----------------|
-| `AuthServiceTest` | Unit | Register, login, 2FA, refresh, reset, logout |
-| `ProductServiceTest` | Unit | Catalog mapping and search response |
-| `CartServiceTest` | Unit | Cart totals and stock checks |
+| `CartServiceTest` | Unit | Cart totals, stock limits, remove item |
 | `OrderServiceTest` | Unit | Checkout validation, order totals, cancel restock |
+| `CheckoutFlowIntegrationTest` | Integration | Register, cart, checkout, pay, **payment fail → retry → success**, cancel |
+| `AuthIntegrationTest` | Integration | Auth flow, refresh token rotation |
+| `ProductCatalogIntegrationTest` | Integration | Search, filters, categories |
+| `AuthServiceTest` | Unit | Register, login, 2FA, reset |
+| `ProductServiceTest` | Unit | Catalog mapping |
+| `AuthSecurityTest` | Security | Injection / weak password on register |
+| `ProductCatalogSecurityTest` | Security | Search injection |
+| `OAuthEndpointSecurityTest` | Security | OAuth endpoints |
 | `RateLimitingFilterTest` | Unit | Auth rate limits |
-| `AuthIntegrationTest` | Integration | Full auth flow; **refresh token reuse rejected** |
-| `ProductCatalogIntegrationTest` | Integration | Search, filters, pagination, categories |
-| `CheckoutFlowIntegrationTest` | Integration | Register then cart then checkout then sandbox pay |
-| `AuthSecurityTest` | Security | XSS/SQL payloads on register, weak password |
-| `ProductCatalogSecurityTest` | Security | Injection in search, public catalog access |
-| `OAuthEndpointSecurityTest` | Security | OAuth endpoint reachable without prior auth |
 | `AuthControllerTest` | API | Controller validation |
 
 ---
 
-## Architecture
+## Architecture (commerce flow)
 
-**Why this shape**
+```
+Customer → Cart API (guest cookie / user cart)
+         → POST /orders (PENDING_PAYMENT, stock reserved)
+         → Payment API (Stripe Elements or sandbox)
+         → Order PAID or FAILED (stock adjusted)
+         → RabbitMQ event → failure email (async)
+         → Confirmation email on success (sync)
+```
 
-- **Spring Boot** - REST API, security, JPA, Flyway migrations in one place.
-- **React + Vite** - product grid, auth forms, cart, checkout, and orders without full page reloads.
-- **PostgreSQL** - relational catalog, auth, cart, and order tables; ACID transactions for token rotation and checkout.
-- **RabbitMQ** - payment status events drive async notification emails (optional via `APP_MESSAGING_ENABLED`).
-- **Docker Compose** - postgres, RabbitMQ, API, and nginx frontend start together for demos.
-
-**JWT**
-
-| Token | Lifetime | Where it lives |
-|-------|----------|----------------|
-| Access | 15 min | In-memory in `AuthContext.tsx` |
-| Refresh | 7 days | httpOnly cookie |
-
-A JWT has three parts:
-
-1. **Header** - algorithm (`HS256`) and type (`JWT`)
-2. **Payload** - `sub` (email), `jti` (ID for revocation), `type`, `exp`, `iat`
-3. **Signature** - HMAC over `header.payload` with `app.jwt.secret`
-
-Code: `backend/src/main/java/com/lampify/security/JwtUtil.java`
-
-On refresh, the old refresh token is marked `used` and `revoked`; a new one is issued. Reusing the old token fails (`AuthIntegrationTest.refreshTokenRotationRejectsOldToken`). On logout, the access token `jti` goes into `revoked_access_tokens`.
-
-**ACID (why it matters here)**
-
-- **Atomicity** - refresh rotation updates the old row and inserts a new one inside one `@Transactional` method; both commit or neither does. Checkout place-order and cancel/restock are likewise transactional.
-- **Consistency** - FK constraints (e.g. `products.category_id`, cart/order item FKs) stop orphan rows.
-- **Isolation** - concurrent logins get separate refresh rows; checkout uses `SELECT ... FOR UPDATE` on product stock to prevent overselling.
-- **Durability** - committed tokens, cart, and order data survive a Postgres restart.
-
-**PostgreSQL and growth**
-
-- B-tree indexes on `brand`, `price`, `rating`, `category_id`
-- GIN index on `products.search_vector` (maintained by trigger)
-- HikariCP pool (10 connections) in `application.properties`
-- Read replicas / Redis caching are not set up - reasonable next steps if traffic grows
-
-**Search**
-
-- **Schema:** trigger fills `search_vector` (tsvector) from name (weight A), brand (B), description (C).
-- **Runtime:** `ProductRepositoryImpl` uses `ILIKE` on name, description, brand for the `search` query param.
-- **Facets:** response includes categories, brands, min/max price for the current filter set.
-- **Sort:** `relevance`, `price_asc`, `price_desc`, `rating`, `name`.
-
-Example:  
-`GET /api/products?search=bulb&category=smart-bulbs&brand=LuminaTech&minPrice=20&maxPrice=50&sort=price_asc`
+Order PII and payment failure messages are **encrypted at rest** (AES-GCM, `APP_ENCRYPTION_SECRET`).
 
 ---
 
 ## Entity-relationship diagram
 
-Below matches **Flyway migrations V1-V13**. Mermaid preview shrinks huge diagrams, so relationships are split into readable charts; column details are in the tables underneath.
+Flyway migrations **V1–V13**. Guest carts use `guest_token`; logged-in carts use `user_id` (mutually exclusive). Order contact fields and payment failure messages are encrypted at rest (V13).
 
-**Cardinality / modality**
-
-| Notation | Meaning |
-|----------|-----------|
-| `1:N` | One parent, many children |
-| `(1,1)` | Exactly one - required FK |
-| `(0,N)` | Zero or many - optional side |
-| UK | Unique key |
-
-### Auth & security
-
-```mermaid
-erDiagram
-    USERS ||--o{ REFRESH_TOKENS : has
-    USERS ||--o{ PASSWORD_RESET_TOKENS : has
-    USERS ||--o{ TWO_FACTOR_BACKUP_CODES : has
-    USERS {
-        bigint id PK
-        varchar email UK
-    }
-    REFRESH_TOKENS {
-        bigint id PK
-        bigint user_id FK
-    }
-    PASSWORD_RESET_TOKENS {
-        bigint id PK
-        bigint user_id FK
-    }
-    TWO_FACTOR_BACKUP_CODES {
-        bigint id PK
-        bigint user_id FK
-    }
-    REVOKED_ACCESS_TOKENS {
-        bigint id PK
-        varchar jti UK
-    }
-```
-
-`REVOKED_ACCESS_TOKENS` is standalone (no FK to `USERS`); rows are keyed by access-token `jti`.
-
-### Catalog
-
-```mermaid
-erDiagram
-    CATEGORIES ||--|{ PRODUCTS : contains
-    PRODUCTS ||--|{ PRODUCT_IMAGES : has
-    CATEGORIES {
-        bigint id PK
-        varchar slug UK
-    }
-    PRODUCTS {
-        bigint id PK
-        bigint category_id FK
-    }
-    PRODUCT_IMAGES {
-        bigint id PK
-        bigint product_id FK
-    }
-```
-
-### Commerce (cart, orders, payments)
+### Commerce
 
 ```mermaid
 erDiagram
@@ -283,114 +119,130 @@ erDiagram
     PRODUCTS ||--o{ ORDER_ITEMS : in
     ORDERS ||--|{ ORDER_STATUS_HISTORY : tracks
     ORDERS ||--|{ PAYMENT_TRANSACTIONS : paid_by
+    CATEGORIES ||--|{ PRODUCTS : contains
+    PRODUCTS ||--|{ PRODUCT_IMAGES : has
+
     USERS {
         bigint id PK
+        varchar email UK
     }
     CARTS {
         bigint id PK
-        bigint user_id FK
+        bigint user_id FK UK
         varchar guest_token UK
     }
     CART_ITEMS {
         bigint id PK
         bigint cart_id FK
         bigint product_id FK
+        int quantity
+    }
+    CATEGORIES {
+        bigint id PK
+        varchar slug UK
+        varchar name
+    }
+    PRODUCTS {
+        bigint id PK
+        bigint category_id FK
+        varchar name
+        decimal price
+        int stock_quantity
+    }
+    PRODUCT_IMAGES {
+        bigint id PK
+        bigint product_id FK
+        varchar url_path
+        boolean is_primary
     }
     ORDERS {
         bigint id PK
-        bigint user_id FK
         varchar order_number UK
+        bigint user_id FK
+        varchar status
+        varchar payment_method
+        decimal total_amount
     }
     ORDER_ITEMS {
         bigint id PK
         bigint order_id FK
         bigint product_id FK
+        varchar product_name
+        int quantity
+        decimal line_total
     }
     ORDER_STATUS_HISTORY {
         bigint id PK
         bigint order_id FK
+        varchar status
+        varchar note
     }
     PAYMENT_TRANSACTIONS {
         bigint id PK
         bigint order_id FK
-    }
-    PRODUCTS {
-        bigint id PK
+        varchar provider
+        varchar status
+        decimal amount
     }
 ```
 
-- Users **0..1** cart (`carts.user_id` unique); guests use `guest_token` instead (XOR check).
-- Carts **1:N** cart_items; products **1:N** cart_items.
-- Users **1:N** orders; orders **1:N** order_items / order_status_history / payment_transactions.
-- Products **1:N** order_items (product may be null after delete; snapshot name/price kept on the line).
+### Auth (supporting tables)
 
-### Entity columns
+```mermaid
+erDiagram
+    USERS ||--o{ REFRESH_TOKENS : has
+    USERS ||--o{ PASSWORD_RESET_TOKENS : has
+    USERS ||--o{ TWO_FACTOR_BACKUP_CODES : has
 
-**USERS**
+    USERS {
+        bigint id PK
+        varchar email UK
+        varchar password
+        boolean two_factor_enabled
+    }
+    REFRESH_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        varchar token UK
+        timestamp expires_at
+    }
+    PASSWORD_RESET_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        varchar token UK
+        timestamp expires_at
+    }
+    TWO_FACTOR_BACKUP_CODES {
+        bigint id PK
+        bigint user_id FK
+        varchar code_hash
+        boolean used
+    }
+    REVOKED_ACCESS_TOKENS {
+        bigint id PK
+        varchar jti UK
+        timestamp expires_at
+    }
+```
 
-| Column | Notes |
-|--------|--------|
-| `id` | PK |
-| `email` | UK, NOT NULL |
-| `password` | BCrypt, NOT NULL |
-| `username` | NOT NULL |
-| `provider` | nullable - OAuth provider |
-| `enabled` | default true |
-| `two_factor_enabled` | default false |
-| `two_factor_secret` | nullable |
-| `last_login_at` | nullable |
-| `failed_login_attempts` | |
-| `account_locked_until` | nullable |
-| `created_at`, `updated_at` | |
+`REVOKED_ACCESS_TOKENS` has no FK to `USERS` (keyed by access-token `jti`).
 
-**REFRESH_TOKENS** - `user_id` FK, `token` UK, `expires_at`, `revoked`, `used`, `created_at`
-
-**PASSWORD_RESET_TOKENS** - `user_id` FK, `token` UK, `expires_at`, `used`, `created_at`
-
-**REVOKED_ACCESS_TOKENS** - `jti` UK, `expires_at`, `revoked_at`
-
-**TWO_FACTOR_BACKUP_CODES** - `user_id` FK, `code_hash`, `used`, `created_at`
-
-**CATEGORIES** - `name`, `slug` UK, `description`, `created_at`
-
-**PRODUCTS** - `category_id` FK, `name`, `description`, `price`, `stock_quantity`, `brand`, `rating`, dimensions/weight fields, `search_vector`, timestamps
-
-**PRODUCT_IMAGES** - `product_id` FK, `file_name`, `url_path`, `is_primary`, `sort_order`, `created_at`
-
-**CARTS** (V10) - `user_id` FK UK (nullable), `guest_token` UK (nullable), timestamps; exactly one of user/guest
-
-**CART_ITEMS** (V10) - `cart_id` FK, `product_id` FK, `quantity` (>0), unique `(cart_id, product_id)`, timestamps
-
-**ORDERS** (V11, widened V13 for AES-GCM) - `order_number` UK, `user_id` FK, `status`, `payment_method`, contact/address fields (encrypted at rest), `total_amount`, timestamps
-
-**ORDER_ITEMS** (V11) - `order_id` FK, `product_id` FK (nullable), `product_name`, `unit_price`, `quantity`, `line_total`
-
-**ORDER_STATUS_HISTORY** (V11) - `order_id` FK, `status`, `note`, `created_at`
-
-**PAYMENT_TRANSACTIONS** (V12, widened V13) - `order_id` FK, `provider`, `provider_payment_id`, `status`, failure fields, `amount`, `currency`, timestamps
-
-**Relationship summary**
-
-| From | To | Cardinality | Modality |
-|------|-----|-------------|----------|
-| User | Refresh tokens | 1:N | User must exist; many tokens over time (rotation) |
-| User | Password reset tokens | 1:N | Optional until reset requested |
-| User | 2FA backup codes | 1:N | Only when 2FA setup runs |
-| Category | Products | 1:N | Each product belongs to exactly one category |
-| Product | Product images | 1:N | At least zero images; UI uses placeholder if none |
-| User | Cart | 0..1 | Optional; guest carts use `guest_token` instead |
-| Cart | Cart items | 1:N | Items cleared after successful checkout |
-| User | Orders | 1:N | Guest checkout may leave `user_id` null |
-| Order | Order items / status history / payments | 1:N | Created at place-order / payment |
-
-Migrations: **V1-V13** (commerce: V10 carts, V11 orders, V12 payment_transactions, V13 widen encrypted columns).
+| From | To | Notes |
+|------|-----|--------|
+| User | Cart | 0..1; guest carts via `guest_token` |
+| Cart | Cart items | 1:N; cleared after checkout |
+| User | Orders | 1:N; guest checkout may leave `user_id` null |
+| Order | Items / history / payments | 1:N |
+| Product | Cart items / order items | Stock locked at checkout |
 
 ---
 
-## Other docs
+## Additional features
 
-| File | Purpose |
-|------|---------|
-| [example.env](example.env) | OAuth, reCAPTCHA, SMTP, Stripe, RabbitMQ, encryption template |
-| [docs/RECAPTCHA_SETUP.md](docs/RECAPTCHA_SETUP.md) | reCAPTCHA keys, localhost, and Render |
+- Product search, category/brand/price filters, sort
+- Google OAuth, reCAPTCHA v3 (optional), TOTP 2FA
+- JWT refresh rotation and access-token revocation
+- Password reset email flow
+- Dockerized full stack (frontend, backend, Postgres, RabbitMQ)
 
+Configuration template: [example.env](example.env)
