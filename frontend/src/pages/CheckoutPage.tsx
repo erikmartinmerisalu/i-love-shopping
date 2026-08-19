@@ -53,6 +53,12 @@ const CheckoutPage = () => {
   const handlePaymentSuccess = (result: PaymentResultResponse) => {
     setPaymentError(null);
     setPaymentResult(result);
+    if (result.success && result.orderNumber) {
+      navigate(`/orders/confirmation/${encodeURIComponent(result.orderNumber)}`, {
+        replace: true,
+        state: { email: result.order?.email ?? form.email },
+      });
+    }
   };
 
   const handlePaymentFailed = (result: PaymentResultResponse) => {
@@ -130,17 +136,7 @@ const CheckoutPage = () => {
 
   if (paymentResult?.success) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-wide">Payment successful</h1>
-          <button
-            onClick={() => navigate('/products')}
-            className="text-sm text-sky-300 hover:text-sky-200"
-          >
-            Continue shopping
-          </button>
-        </header>
-        <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">
+      <div className="page-container-narrow space-y-6 py-10">
           <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-5 text-green-100">
             <p className="font-semibold text-lg">{paymentResult.message}</p>
             <p className="mt-2 text-sm">
@@ -177,24 +173,23 @@ const CheckoutPage = () => {
               </div>
             </section>
           )}
-        </main>
       </div>
     );
   }
 
   if (placedOrder) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-wide">Pay for order</h1>
-          <button
-            onClick={() => navigate('/products')}
-            className="text-sm text-sky-300 hover:text-sky-200"
-          >
-            Back to shop
-          </button>
-        </header>
-        <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">
+      <div className="page-container-form space-y-6 py-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-2xl font-bold">Pay for order</h1>
+            <button
+              type="button"
+              onClick={() => navigate('/products')}
+              className="text-sm text-sky-300 hover:text-sky-200"
+            >
+              Back to shop
+            </button>
+          </div>
           <div className="rounded-xl border border-sky-500/40 bg-sky-500/10 p-5 text-sky-100 text-sm">
             Order <span className="font-mono font-semibold">{placedOrder.orderNumber}</span> is ready
             for payment. Complete payment below — stock is reserved until payment succeeds or fails. A
@@ -238,24 +233,24 @@ const CheckoutPage = () => {
               <span className="text-primary">€{Number(placedOrder.totalAmount).toFixed(2)}</span>
             </div>
           </section>
-        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-wide">Checkout</h1>
+    <div className="page-container-form py-10">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Checkout</h1>
         <button
+          type="button"
           onClick={() => navigate('/products')}
           className="text-sm text-sky-300 hover:text-sky-200"
         >
           ← Back to shop
         </button>
-      </header>
+      </div>
 
-      <main className="max-w-5xl mx-auto px-6 py-10 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {formError && (
             <div className="rounded-xl border border-red-700 bg-red-900/40 px-4 py-3 text-sm text-red-200">
@@ -458,7 +453,7 @@ const CheckoutPage = () => {
             </>
           )}
         </aside>
-      </main>
+      </div>
     </div>
   );
 };

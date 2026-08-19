@@ -1,0 +1,2 @@
+name,description,price,stockQuantity,brand,categorySlug,sku,active,featured
+Sample Lamp,Warm ambient desk lamp,49.99,25,LuminaTech,floor-lamps,LMP-001,true,false

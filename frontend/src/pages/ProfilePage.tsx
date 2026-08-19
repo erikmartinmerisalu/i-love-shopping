@@ -1,18 +1,34 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { adminNeedsTwoFactorSetup, useAuth } from "../context/AuthContext";
 import SecuritySettings from "../components/SecuritySettings";
 import { formatAuthProvider, socialSignInLabel } from "../utils/authProvider";
 
 type ProfileTab = "account" | "oauth" | "security" | "password";
 
+const isProfileTab = (value: string | null): value is ProfileTab =>
+  value === "account" || value === "oauth" || value === "security" || value === "password";
+
 const ProfilePage = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ProfileTab>("account");
 
   const isOAuthAccount = user?.oauthAccount === true;
   const providerLabel = formatAuthProvider(user?.provider);
+  const showAdminGate = adminNeedsTwoFactorSetup(user);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (isProfileTab(tabParam)) {
+      setActiveTab(tabParam);
+      return;
+    }
+    if (searchParams.get("admin2fa") === "1") {
+      setActiveTab("security");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (isOAuthAccount && activeTab === "password") {
@@ -32,40 +48,62 @@ const ProfilePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
-        <div className="flex justify-between items-center px-4 sm:px-6 lg:px-10 xl:px-16 py-4 w-full">
-          <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-primary">ESTValgus</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3">
-              <p className="text-sm text-slate-300">Signed in as {user.username}</p>
-              {isOAuthAccount && (
-                <span className="rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-xs font-semibold text-sky-300">
-                  {providerLabel} account
-                </span>
-              )}
-              <span className="text-xs text-slate-500">· Account settings</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/products")}
-              className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition"
-            >
-              Shop
-            </button>
-            <button
-              onClick={logout}
-              className="bg-rose-700 text-white px-4 py-2 rounded-lg hover:bg-rose-600 transition font-semibold border border-rose-500/40 shadow-sm shadow-rose-900/30"
-            >
-              Logout
-            </button>
-          </div>
+    <div className="page-container-form py-10">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Profile</h1>
+          <p className="mt-1 text-sm text-slate-300">
+            Signed in as {user.username}
+            {isOAuthAccount && (
+              <span className="ml-2 rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-xs font-semibold text-sky-300">
+                {providerLabel} account
+              </span>
+            )}
+          </p>
         </div>
-      </header>
+        <button
+          type="button"
+          onClick={() => navigate('/products')}
+          className="rounded-lg bg-gray-800 px-4 py-2 text-sm hover:bg-gray-700 transition"
+        >
+          Shop
+        </button>
+      </div>
 
-      <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
+      <div className="max-w-4xl">
+        {showAdminGate && (
+          <div
+            className="mb-6 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-gray-900 to-gray-900 p-5 sm:p-6"
+            role="status"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-300">Admin setup required</p>
+            <h2 className="mt-2 text-lg font-bold text-white sm:text-xl">
+              Enable two-factor authentication to open the admin panel
+            </h2>
+            <p className="mt-2 text-sm text-gray-300">
+              Admin accounts must use 2FA before catalog, orders, or user management is available.
+              Complete the steps below, then open Admin again from the header.
+            </p>
+            <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-gray-200">
+              <li>Stay on the <strong className="text-white">Two-factor auth</strong> tab (selected below).</li>
+              <li>
+                {isOAuthAccount
+                  ? "Click Generate QR code (no password needed for OAuth accounts)."
+                  : "Enter your password and click Generate QR code."}
+              </li>
+              <li>Scan the QR code with an authenticator app (Google Authenticator, Authy, etc.).</li>
+              <li>Enter the 6-digit code and click Verify &amp; enable.</li>
+              <li>
+                After success, use{" "}
+                <Link to="/admin" className="font-semibold text-sky-300 hover:text-sky-200">
+                  Open admin panel
+                </Link>{" "}
+                or the Admin link in the header.
+              </li>
+            </ol>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-800 pb-4">
           {tabs.map((tab) => (
             <button
@@ -155,7 +193,7 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {activeTab === "security" && <SecuritySettings />}
+        {activeTab === "security" && <SecuritySettings adminGate={showAdminGate} />}
 
         {activeTab === "password" && !isOAuthAccount && (
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 space-y-4">

@@ -85,6 +85,21 @@ public class EmailService {
         sendEmail(order.getEmail(), subject, body.toString(), "order confirmation");
     }
 
+    public void sendContactEmail(String name, String fromEmail, String subject, String message) {
+        String toAddress = resolveFromAddress();
+        String mailSubject = "ESTValgus contact: " + subject;
+        String body = "Contact form submission\n\n"
+                + "From: " + name + " <" + fromEmail + ">\n"
+                + "Subject: " + subject + "\n\n"
+                + message + "\n\n"
+                + "Reply directly to the sender's email address.";
+        if (toAddress != null && !toAddress.isBlank()) {
+            sendEmail(toAddress, mailSubject, body, "contact form");
+        } else {
+            log.info("Mail not configured. Contact form from {} <{}>:\n{}", name, fromEmail, body);
+        }
+    }
+
     public void sendPaymentSuccessEmail(PaymentStatusEvent event) {
         String subject = "ESTValgus payment successful — " + event.orderNumber();
         String body = "Your payment was successful.\n\n"

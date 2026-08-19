@@ -72,6 +72,13 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_option_id")
+    private DeliveryOption deliveryOption;
+
+    @Column(name = "estimated_delivery_at")
+    private LocalDateTime estimatedDeliveryAt;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

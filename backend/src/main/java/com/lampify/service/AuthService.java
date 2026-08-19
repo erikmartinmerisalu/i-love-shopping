@@ -7,6 +7,7 @@ import com.lampify.entity.PasswordResetToken;
 import com.lampify.entity.RefreshToken;
 import com.lampify.entity.TwoFactorBackupCode;
 import com.lampify.entity.User;
+import com.lampify.entity.UserRole;
 import com.lampify.repository.PasswordResetTokenRepository;
 import com.lampify.repository.RefreshTokenRepository;
 import com.lampify.repository.TwoFactorBackupCodeRepository;
@@ -457,6 +458,8 @@ public class AuthService {
         response.setUsername(user.getUsername());
         response.setProvider(user.getProvider());
         response.setOauthAccount(!usesEmailPasswordLogin(user));
+        response.setRole(user.getRole().name());
+        response.setRequiresTwoFactorSetup(user.getRole() == UserRole.ADMIN && !user.isTwoFactorEnabled());
     }
 
     private boolean usesEmailPasswordLogin(User user) {
@@ -530,7 +533,7 @@ public class AuthService {
     }
 
     private AuthResponse issueTokens(User user, String message) {
-        String accessToken = jwtUtil.generateToken(user.getEmail());
+        String accessToken = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         String refreshToken = createRefreshToken(user);
 
         AuthResponse response = success(message);

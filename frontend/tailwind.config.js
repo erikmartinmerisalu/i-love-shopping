@@ -5,7 +5,18 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      maxWidth: {
+        content: '1600px',
+        'content-wide': '1760px',
+      },
+      colors: {
+        primary: {
+          DEFAULT: '#0ea5e9',
+          focus: '#0284c7',
+        },
+      },
+    },
   },
   plugins: [require('daisyui')],
   daisyui: {

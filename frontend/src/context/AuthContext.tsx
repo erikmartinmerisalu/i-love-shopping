@@ -14,6 +14,8 @@ type AuthResponse = {
   backupCodes?: string[];
   provider?: string;
   oauthAccount?: boolean;
+  role?: string;
+  requiresTwoFactorSetup?: boolean;
 };
 
 type AuthUser = {
@@ -21,6 +23,8 @@ type AuthUser = {
   username: string;
   provider?: string;
   oauthAccount?: boolean;
+  role?: string;
+  twoFactorEnabled?: boolean;
 };
 
 type AuthContextType = {
@@ -29,6 +33,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isGuest: boolean;
   isLoading: boolean;
+  requiresTwoFactorSetup: boolean;
   continueAsGuest: () => void;
   login: (email: string, password: string) => Promise<AuthResponse>;
   verifyTwoFactorLogin: (email: string, password: string, code: string) => Promise<AuthResponse>;
@@ -42,6 +47,9 @@ type AuthContextType = {
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
 };
+
+export const adminNeedsTwoFactorSetup = (user: AuthUser | null) =>
+  user?.role === "ADMIN" && user.twoFactorEnabled !== true;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -85,6 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [requiresTwoFactorSetup, setRequiresTwoFactorSetup] = useState(false);
   const isMountedRef = useRef(true);
 
   const continueAsGuest = useCallback(() => {
@@ -121,7 +130,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             username: data.username,
             provider: data.provider,
             oauthAccount: data.oauthAccount,
+            role: data.role,
+            twoFactorEnabled: data.twoFactorEnabled,
           });
+          setRequiresTwoFactorSetup(
+            data.role === "ADMIN" && data.twoFactorEnabled !== true,
+          );
           scheduleTokenRefresh(data.accessToken);
         }
       } catch {
@@ -144,7 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         username: data.username,
         provider: data.provider,
         oauthAccount: data.oauthAccount,
+        role: data.role,
+        twoFactorEnabled: data.twoFactorEnabled,
       });
+      setRequiresTwoFactorSetup(data.role === "ADMIN" && data.twoFactorEnabled !== true);
       scheduleTokenRefresh(data.accessToken);
     },
     [scheduleTokenRefresh]
@@ -346,7 +363,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       credentials: "include",
       body: JSON.stringify({ email, password, twoFactorCode: code }),
     });
-    return response.json();
+    const data: AuthResponse = await response.json();
+    if (data.success) {
+      setUser((current) =>
+        current
+          ? {
+              ...current,
+              twoFactorEnabled: true,
+            }
+          : current,
+      );
+      setRequiresTwoFactorSetup(false);
+    }
+    return data;
   };
 
   const disableTwoFactor = async (email: string, password: string, code: string) => {
@@ -356,7 +385,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       credentials: "include",
       body: JSON.stringify({ email, password, twoFactorCode: code }),
     });
-    return response.json();
+    const data: AuthResponse = await response.json();
+    if (data.success) {
+      setUser((current) => {
+        if (current) {
+          setRequiresTwoFactorSetup(current.role === "ADMIN");
+          return { ...current, twoFactorEnabled: false };
+        }
+        return current;
+      });
+    }
+    return data;
   };
 
   const logout = async () => {
@@ -373,6 +412,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearGuestSession();
       setIsGuest(false);
       setUser(null);
+      setRequiresTwoFactorSetup(false);
       clearRefreshTimer();
     }
   };
@@ -384,6 +424,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated: !!accessToken,
       isGuest,
       isLoading,
+      requiresTwoFactorSetup,
       continueAsGuest,
       login,
       verifyTwoFactorLogin,
@@ -397,7 +438,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       refreshSession,
     }),
-    [user, isGuest, isLoading, continueAsGuest, persistAuth, refreshSession]
+    [user, isGuest, isLoading, requiresTwoFactorSetup, continueAsGuest, persistAuth, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

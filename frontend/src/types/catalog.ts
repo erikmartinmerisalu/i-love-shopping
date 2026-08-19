@@ -13,9 +13,54 @@ export type Product = {
   stockQuantity: number;
   brand: string;
   rating: number;
+  reviewCount: number;
   category: string;
   categorySlug: string;
   primaryImageUrl: string | null;
+};
+
+export type ProductSuggestion = {
+  id: number;
+  name: string;
+  categorySlug: string;
+  price: number;
+  primaryImageUrl: string | null;
+};
+
+export type ProductDetail = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  brand: string;
+  rating: number;
+  reviewCount: number;
+  category: Category;
+  imageUrls: string[];
+  sku?: string | null;
+  active?: boolean;
+  featured?: boolean;
+  dimensions: {
+    weightKg: number | null;
+    weightLb: number | null;
+    lengthCm: number | null;
+    lengthIn: number | null;
+    widthCm: number | null;
+    widthIn: number | null;
+    heightCm: number | null;
+    heightIn: number | null;
+  };
+};
+
+export type CategoryCollection = {
+  category: Category;
+  products: Product[];
+};
+
+export type HomeData = {
+  featuredProducts: Product[];
+  collections: CategoryCollection[];
 };
 
 export type ProductFacets = {

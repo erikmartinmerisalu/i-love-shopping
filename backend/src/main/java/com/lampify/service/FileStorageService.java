@@ -17,8 +17,9 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "gif");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "gif", "svg");
     private static final String DEFAULT_PRODUCT_IMAGE = "catalog/default-product.png";
+    private static final String SEED_IMAGE_DIR = "catalog/seed/";
     private static final String PLACEHOLDER_FILE_NAME = "placeholder.png";
 
     @Value("${app.upload.dir:uploads}")
@@ -42,13 +43,25 @@ public class FileStorageService {
     }
 
     public void ensureProductPlaceholder(Long productId) throws IOException {
-        Path target = productPlaceholderPath(productId);
+        ensureSeedImage(productId, PLACEHOLDER_FILE_NAME);
+    }
+
+    public void ensureSeedImage(Long productId, String fileName) throws IOException {
+        String resolvedName = (fileName == null || fileName.isBlank()) ? PLACEHOLDER_FILE_NAME : fileName.trim();
+        Path target = uploadRoot().resolve(Paths.get("products", String.valueOf(productId), resolvedName));
         if (Files.exists(target)) {
             return;
         }
 
         Files.createDirectories(target.getParent());
-        ClassPathResource resource = new ClassPathResource(DEFAULT_PRODUCT_IMAGE);
+        ClassPathResource seedResource = new ClassPathResource(SEED_IMAGE_DIR + resolvedName);
+        ClassPathResource resource = seedResource.exists()
+                ? seedResource
+                : new ClassPathResource(DEFAULT_PRODUCT_IMAGE);
+        if (!seedResource.exists()) {
+            target = productPlaceholderPath(productId);
+        }
+
         try (InputStream inputStream = resource.getInputStream()) {
             Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
         }

@@ -2,6 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    font-size: 100%;
+  }
+
+  body {
+    @apply min-h-screen text-white antialiased;
+    line-height: 1.5;
+    background-color: #020617;
+    background-image:
+      radial-gradient(ellipse 120% 80% at 0% -20%, rgba(14, 165, 233, 0.14), transparent 55%),
+      radial-gradient(ellipse 90% 70% at 100% 0%, rgba(99, 102, 241, 0.11), transparent 50%),
+      radial-gradient(ellipse 80% 60% at 50% 110%, rgba(14, 165, 233, 0.08), transparent 55%),
+      linear-gradient(180deg, #0b1220 0%, #020617 45%, #010409 100%);
+    background-attachment: fixed;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 85%);
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full px-2 sm:px-2.5 lg:px-3 xl:px-5 2xl:px-6;
+  }
+
+  .page-container-narrow {
+    @apply mx-auto w-full max-w-5xl px-2 sm:px-3 lg:px-4 xl:px-5;
+  }
+
+  .page-container-form {
+    @apply mx-auto w-full max-w-7xl px-2 sm:px-3 lg:px-4 xl:px-5;
+  }
+
+  .surface-panel {
+    @apply rounded-2xl border border-white/10 bg-gray-900/55 shadow-xl shadow-black/20 backdrop-blur-sm;
+  }
+
+  .cart-sidebar {
+    @apply w-full shrink-0 border-l border-white/10 bg-gray-950/95 shadow-[-8px_0_30px_rgba(0,0,0,0.35)] backdrop-blur-md;
+    width: min(28rem, 100vw);
+  }
+
+  @media (min-width: 1280px) {
+    .cart-sidebar {
+      width: min(32rem, 30vw);
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .cart-sidebar {
+      width: min(36rem, 28vw);
+    }
+  }
+}
+
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
 .dual-range-thumb {
   pointer-events: none;
 }

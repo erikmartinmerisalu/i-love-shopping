@@ -1,5 +1,6 @@
 package com.lampify.security;
 
+import com.lampify.entity.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -29,11 +30,11 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String subject) {
-        return generateAccessToken(subject, UUID.randomUUID().toString());
+    public String generateToken(String subject, String role) {
+        return generateAccessToken(subject, UUID.randomUUID().toString(), role);
     }
 
-    public String generateAccessToken(String subject, String jti) {
+    public String generateAccessToken(String subject, String jti, String role) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + jwtExpirationMs);
 
@@ -41,10 +42,20 @@ public class JwtUtil {
             .setSubject(subject)
             .setId(jti)
             .claim("type", "access")
+            .claim("role", role != null ? role : UserRole.CUSTOMER.name())
             .setIssuedAt(now)
             .setExpiration(expiration)
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
             .compact();
+    }
+
+    /** @deprecated use {@link #generateToken(String, String)} */
+    public String generateToken(String subject) {
+        return generateToken(subject, UserRole.CUSTOMER.name());
+    }
+
+    public String generateAccessToken(String subject, String jti) {
+        return generateAccessToken(subject, jti, UserRole.CUSTOMER.name());
     }
 
     public String generateRefreshToken(String subject, String jti) {
@@ -103,5 +114,14 @@ public class JwtUtil {
             .build()
             .parseClaimsJws(token);
         return claimsJws.getBody().getExpiration();
+    }
+
+    public String getRoleFromToken(String token) {
+        Jws<Claims> claimsJws = Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token);
+        String role = claimsJws.getBody().get("role", String.class);
+        return role != null ? role : UserRole.CUSTOMER.name();
     }
 }

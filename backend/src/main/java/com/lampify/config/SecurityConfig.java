@@ -2,9 +2,12 @@ package com.lampify.config;
 
 import com.lampify.security.JwtAuthenticationFilter;
 import com.lampify.security.RateLimitingFilter;
+import com.lampify.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -19,10 +22,12 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitingFilter rateLimitingFilter;
+    private final AdminAccessFilter adminAccessFilter;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -36,9 +41,14 @@ public class SecurityConfig {
     @Value("${app.cors.allow-credentials}")
     private boolean allowCredentials;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitingFilter rateLimitingFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitingFilter rateLimitingFilter,
+            UserRepository userRepository,
+            ObjectMapper objectMapper) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitingFilter = rateLimitingFilter;
+        this.adminAccessFilter = new AdminAccessFilter(userRepository, objectMapper);
     }
 
     @Bean
@@ -49,13 +59,18 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/api/auth/**").permitAll()
                 .requestMatchers("/products/**", "/categories/**", "/uploads/**").permitAll()
+                .requestMatchers("/reviews/**").authenticated()
+                .requestMatchers("/home", "/home/**").permitAll()
+                .requestMatchers("/contact", "/contact/**").permitAll()
                 .requestMatchers("/cart", "/cart/**").permitAll()
                 .requestMatchers("/orders", "/orders/**").permitAll()
                 .requestMatchers("/payments", "/payments/**").permitAll()
+                .requestMatchers("/admin/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(adminAccessFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

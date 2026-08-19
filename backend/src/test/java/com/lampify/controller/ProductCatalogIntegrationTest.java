@@ -4,6 +4,7 @@ import com.lampify.entity.Category;
 import com.lampify.entity.Product;
 import com.lampify.repository.CategoryRepository;
 import com.lampify.repository.ProductRepository;
+import com.lampify.support.TestDatabaseCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +33,15 @@ class ProductCatalogIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private TestDatabaseCleaner databaseCleaner;
+
     private Category smartBulbs;
     private Category deskLamps;
 
     @BeforeEach
     void seedCatalog() {
-        productRepository.deleteAll();
-        categoryRepository.deleteAll();
+        databaseCleaner.resetCatalogData();
 
         smartBulbs = categoryRepository.save(category("Smart Bulbs", "smart-bulbs", "WiFi bulbs"));
         deskLamps = categoryRepository.save(category("Desk Lamps", "desk-lamps", "Task lighting"));

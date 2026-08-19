@@ -1,0 +1,10 @@
+ALTER TABLE users
+    ADD COLUMN role VARCHAR(32) NOT NULL DEFAULT 'CUSTOMER';
+
+ALTER TABLE products
+    ADD COLUMN sku VARCHAR(64),
+    ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;
+
+CREATE UNIQUE INDEX idx_products_sku ON products (sku) WHERE sku IS NOT NULL;
+
+UPDATE products SET active = TRUE WHERE active IS NULL;

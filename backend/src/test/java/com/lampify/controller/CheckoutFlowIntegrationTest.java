@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lampify.entity.Category;
 import com.lampify.entity.Product;
 import com.lampify.repository.CategoryRepository;
-import com.lampify.repository.OrderRepository;
-import com.lampify.repository.PaymentTransactionRepository;
 import com.lampify.repository.ProductRepository;
+import com.lampify.support.TestDatabaseCleaner;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,19 +50,13 @@ class CheckoutFlowIntegrationTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private PaymentTransactionRepository paymentTransactionRepository;
+    private TestDatabaseCleaner databaseCleaner;
 
     private Product product;
 
     @BeforeEach
     void seedProduct() {
-        paymentTransactionRepository.deleteAll();
-        orderRepository.deleteAll();
-        productRepository.deleteAll();
-        categoryRepository.deleteAll();
+        databaseCleaner.resetCatalogData();
 
         Category category = new Category();
         category.setName("Test Category");

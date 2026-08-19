@@ -43,6 +43,18 @@ public class Product {
     @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal rating = BigDecimal.ZERO;
 
+    @Column(nullable = false)
+    private int reviewCount = 0;
+
+    @Column(nullable = false)
+    private boolean featured = false;
+
+    @Column(length = 64)
+    private String sku;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
     @Column(precision = 8, scale = 3)
     private BigDecimal weightKg;
 

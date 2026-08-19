@@ -18,6 +18,7 @@ public class ProductDto {
     private int stockQuantity;
     private String brand;
     private BigDecimal rating;
+    private int reviewCount;
     private String category;
     private String categorySlug;
     private String primaryImageUrl;

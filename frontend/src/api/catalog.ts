@@ -1,4 +1,11 @@
-import type { Category, ProductListResponse, ProductSearchParams } from '../types/catalog';
+import type {
+  HomeData,
+  ProductDetail,
+  ProductListResponse,
+  ProductSearchParams,
+  ProductSuggestion,
+  Product,
+} from '../types/catalog';
 
 const buildQuery = (params: ProductSearchParams): string => {
   const query = new URLSearchParams();
@@ -40,7 +47,40 @@ export async function fetchProducts(params: ProductSearchParams = {}): Promise<P
   return response.json();
 }
 
-export async function fetchCategories(): Promise<Category[]> {
+export async function fetchProduct(id: number): Promise<ProductDetail> {
+  const response = await fetch(`/api/products/${id}`);
+  if (!response.ok) {
+    throw new Error('Product not found');
+  }
+  return response.json();
+}
+
+export async function fetchRelatedProducts(id: number, limit = 4): Promise<Product[]> {
+  const response = await fetch(`/api/products/${id}/related?limit=${limit}`);
+  if (!response.ok) {
+    return [];
+  }
+  return response.json();
+}
+
+export async function fetchProductSuggestions(query: string, limit = 8): Promise<ProductSuggestion[]> {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  const response = await fetch(`/api/products/suggest?${params}`);
+  if (!response.ok) {
+    return [];
+  }
+  return response.json();
+}
+
+export async function fetchHome(): Promise<HomeData> {
+  const response = await fetch('/api/home');
+  if (!response.ok) {
+    throw new Error('Failed to load home page');
+  }
+  return response.json();
+}
+
+export async function fetchCategories() {
   const response = await fetch('/api/categories');
   if (!response.ok) {
     throw new Error('Failed to load categories');

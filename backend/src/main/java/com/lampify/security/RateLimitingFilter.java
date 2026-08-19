@@ -33,27 +33,34 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     @Value("${app.rate.limit.window-duration:60}")
     private int windowSeconds;
 
+    @Value("${app.rate.limit.contact-limit:5}")
+    private int contactLimit;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!enabled) {
             return true;
         }
         String path = request.getRequestURI();
-        if (!path.contains("/auth/")) {
-            return true;
-        }
-        // Refresh runs on every page load; rate-limiting it behind a proxy causes shared 429s on Render.
         if (path.contains("/auth/refresh")) {
             return true;
         }
-        return false;
+        if (path.contains("/auth/")) {
+            return false;
+        }
+        if ("POST".equalsIgnoreCase(request.getMethod()) && path.contains("/contact")) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String key = resolveClientIp(request) + ":" + request.getRequestURI();
+        String path = request.getRequestURI();
+        int effectiveLimit = path.contains("/contact") ? contactLimit : limit;
+        String key = resolveClientIp(request) + ":" + path;
         WindowState state = windows.computeIfAbsent(key, ignored -> new WindowState());
 
         long now = System.currentTimeMillis();
@@ -65,7 +72,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                 state.windowStartMs = now;
             }
 
-            if (state.count.incrementAndGet() > limit) {
+            if (state.count.incrementAndGet() > effectiveLimit) {
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.setContentType("application/json");
                 response.getWriter().write("{\"message\":\"Too many requests. Please try again later.\"}");

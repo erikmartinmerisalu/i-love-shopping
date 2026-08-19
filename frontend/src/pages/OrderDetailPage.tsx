@@ -66,20 +66,20 @@ const OrderDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-wide">Order details</h1>
+    <div className="page-container-form space-y-6 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Order details</h1>
         <div className="flex gap-3 text-sm">
-          <button onClick={() => navigate('/orders')} className="text-sky-300 hover:text-sky-200">
+          <button type="button" onClick={() => navigate('/orders')} className="text-sky-300 hover:text-sky-200">
             All orders
           </button>
-          <button onClick={() => navigate('/products')} className="text-sky-300 hover:text-sky-200">
+          <button type="button" onClick={() => navigate('/products')} className="text-sky-300 hover:text-sky-200">
             Shop
           </button>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-4xl space-y-6">
         {!isAuthenticated && !emailHint && (
           <form
             className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-3"
@@ -205,7 +205,7 @@ const OrderDetailPage = () => {
             </section>
           </>
         ) : null}
-      </main>
+      </div>
     </div>
   );
 };

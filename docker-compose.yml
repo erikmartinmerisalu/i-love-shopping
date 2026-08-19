@@ -64,6 +64,9 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      APP_ADMIN_SEED_ENABLED: ${APP_ADMIN_SEED_ENABLED:-true}
+      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL:-admin@estvalgus.local}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:-Admin123!}
     volumes:
       - uploads_data:/app/uploads
     ports:

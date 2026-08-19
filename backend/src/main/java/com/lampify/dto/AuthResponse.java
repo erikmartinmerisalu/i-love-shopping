@@ -22,4 +22,6 @@ public class AuthResponse {
     private List<String> backupCodes;
     private String provider;
     private boolean oauthAccount;
+    private String role;
+    private boolean requiresTwoFactorSetup;
 }

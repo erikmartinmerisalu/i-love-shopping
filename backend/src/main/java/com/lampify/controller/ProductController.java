@@ -43,6 +43,20 @@ public class ProductController {
         return ResponseEntity.ok(productService.searchProducts(criteria));
     }
 
+    @GetMapping("/suggest")
+    public ResponseEntity<List<ProductSuggestionDto>> suggestProducts(
+            @RequestParam(name = "q") String query,
+            @RequestParam(defaultValue = "8") int limit) {
+        return ResponseEntity.ok(productService.suggestProducts(query, limit));
+    }
+
+    @GetMapping("/{id}/related")
+    public ResponseEntity<List<ProductDto>> getRelatedProducts(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "4") int limit) {
+        return ResponseEntity.ok(productService.getRelatedProducts(id, limit));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailDto> getProduct(@PathVariable Long id) {
         return productService.getProductById(id)

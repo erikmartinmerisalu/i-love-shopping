@@ -55,39 +55,37 @@ const OrdersPage = () => {
 
   if (isGuest || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between">
-          <h1 className="text-xl font-bold">My orders</h1>
-          <button onClick={() => navigate('/products')} className="text-sm text-sky-300">
-            ← Shop
-          </button>
-        </header>
-        <main className="max-w-3xl mx-auto px-6 py-10">
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-100 text-sm">
-            Order history requires a logged-in account. After a successful payment, guests receive a
-            confirmation email with the order number.
-          </div>
-          <button
-            onClick={() => navigate('/login')}
-            className="mt-4 rounded-lg bg-primary px-4 py-2 font-semibold"
-          >
-            Log in
-          </button>
-        </main>
+      <div className="page-container-form py-10">
+        <h1 className="text-2xl font-bold">My orders</h1>
+        <div className="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-100 text-sm">
+          Order history requires a logged-in account. After a successful payment, guests receive a
+          confirmation email with the order number.
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate('/login')}
+          className="mt-4 rounded-lg bg-primary px-4 py-2 font-semibold"
+        >
+          Log in
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-wide">My orders</h1>
-        <button onClick={() => navigate('/products')} className="text-sm text-sky-300 hover:text-sky-200">
+    <div className="page-container-form space-y-6 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">My orders</h1>
+        <button
+          type="button"
+          onClick={() => navigate('/products')}
+          className="text-sm text-sky-300 hover:text-sky-200"
+        >
           ← Back to shop
         </button>
-      </header>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="space-y-6">
         <div className="flex flex-wrap gap-3">
           <label className="text-sm space-y-1">
             <span className="text-gray-400">Status</span>
@@ -155,7 +153,7 @@ const OrdersPage = () => {
             ))}
           </ul>
         )}
-      </main>
+      </div>
     </div>
   );
 };

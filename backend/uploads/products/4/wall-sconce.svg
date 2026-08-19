@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
+  <rect width="640" height="640" fill="#172554"/>
+  <rect x="120" y="200" width="400" height="240" rx="24" fill="#1e3a8a"/>
+  <circle cx="320" cy="320" r="70" fill="#f97316"/>
+  <circle cx="320" cy="320" r="45" fill="#fdba74"/>
+  <rect x="280" y="120" width="80" height="80" rx="12" fill="#334155"/>
+  <text x="320" y="560" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="28">Wall Sconce</text>
+</svg>

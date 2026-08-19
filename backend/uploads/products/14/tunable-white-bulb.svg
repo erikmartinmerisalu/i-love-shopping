@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
+  <rect width="640" height="640" fill="#083344"/>
+  <circle cx="320" cy="250" r="100" fill="#f8fafc"/>
+  <circle cx="320" cy="250" r="72" fill="#e2e8f0"/>
+  <circle cx="320" cy="250" r="44" fill="#38bdf8"/>
+  <rect x="305" y="350" width="30" height="100" rx="8" fill="#94a3b8"/>
+  <text x="320" y="560" text-anchor="middle" fill="#e0f2fe" font-family="sans-serif" font-size="24">Tunable White Bulb</text>
+</svg>

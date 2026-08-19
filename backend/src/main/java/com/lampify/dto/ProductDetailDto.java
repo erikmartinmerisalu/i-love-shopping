@@ -18,8 +18,12 @@ public class ProductDetailDto {
     private int stockQuantity;
     private String brand;
     private BigDecimal rating;
+    private int reviewCount;
     private CategoryDto category;
     private List<String> imageUrls;
+    private String sku;
+    private boolean active = true;
+    private boolean featured;
     private DimensionsDto dimensions;
 
     @Data

@@ -35,6 +35,10 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private UserRole role = UserRole.CUSTOMER;
+
     @Column(nullable = false)
     private boolean twoFactorEnabled = false;
 

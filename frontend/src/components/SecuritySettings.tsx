@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { socialSignInLabel } from "../utils/authProvider";
@@ -5,7 +6,11 @@ import StatusBanner from "./StatusBanner";
 
 type TwoFactorStatus = "idle" | "enabled" | "disabled";
 
-const SecuritySettings = () => {
+type SecuritySettingsProps = {
+  adminGate?: boolean;
+};
+
+const SecuritySettings = ({ adminGate = false }: SecuritySettingsProps) => {
   const { user, setupTwoFactor, verifyTwoFactorSetup, disableTwoFactor } = useAuth();
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -21,6 +26,7 @@ const SecuritySettings = () => {
   }
 
   const isOAuthAccount = user.oauthAccount === true;
+  const alreadyEnabled = user.twoFactorEnabled === true;
 
   const clearFeedback = () => {
     setError("");
@@ -105,12 +111,46 @@ const SecuritySettings = () => {
         </p>
       </div>
 
+      {alreadyEnabled && twoFactorStatus === "idle" && (
+        <StatusBanner
+          variant="success"
+          title="Two-factor authentication is enabled"
+          message={
+            adminGate
+              ? "Your admin account is protected. You can open the admin panel anytime."
+              : "Your account is protected with an authenticator app."
+          }
+        />
+      )}
+
+      {alreadyEnabled && adminGate && twoFactorStatus === "idle" && (
+        <Link
+          to="/admin"
+          className="inline-flex rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-focus transition"
+        >
+          Open admin panel
+        </Link>
+      )}
+
       {twoFactorStatus === "enabled" && (
         <StatusBanner
           variant="success"
           title="Two-factor authentication enabled"
-          message="Your account is now protected. You'll need your authenticator app each time you sign in."
+          message={
+            adminGate
+              ? "You're all set. You can now access the admin panel."
+              : "Your account is now protected. You'll need your authenticator app each time you sign in."
+          }
         />
+      )}
+
+      {twoFactorStatus === "enabled" && adminGate && (
+        <Link
+          to="/admin"
+          className="inline-flex rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-focus transition"
+        >
+          Open admin panel
+        </Link>
       )}
 
       {twoFactorStatus === "disabled" && (
