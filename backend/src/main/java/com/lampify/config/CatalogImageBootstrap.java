@@ -1,6 +1,5 @@
 package com.lampify.config;
 
-import com.lampify.entity.ProductImage;
 import com.lampify.repository.ProductRepository;
 import com.lampify.service.FileStorageService;
 import org.slf4j.Logger;
@@ -26,21 +25,20 @@ public class CatalogImageBootstrap implements ApplicationRunner {
     @Override
     @Transactional(readOnly = true)
     public void run(ApplicationArguments args) {
-        productRepository.findAll().forEach(product -> {
-            String seedFile = product.getImages().stream()
-                    .filter(ProductImage::isPrimaryImage)
-                    .map(ProductImage::getFileName)
-                    .findFirst()
-                    .orElseGet(() -> product.getImages().stream()
-                            .map(ProductImage::getFileName)
-                            .findFirst()
-                            .orElse("placeholder.png"));
-
-            try {
-                fileStorageService.ensureSeedImage(product.getId(), seedFile);
-            } catch (Exception ex) {
-                log.warn("Could not create seed image for product {}: {}", product.getId(), ex.getMessage());
+        productRepository.findAllWithImages().forEach(product -> {
+            if (product.getImages().isEmpty()) {
+                copySeed(product.getId(), "placeholder.png");
+                return;
             }
+            product.getImages().forEach(image -> copySeed(product.getId(), image.getFileName()));
         });
+    }
+
+    private void copySeed(Long productId, String fileName) {
+        try {
+            fileStorageService.ensureSeedImage(productId, fileName);
+        } catch (Exception ex) {
+            log.warn("Could not create seed image {} for product {}: {}", fileName, productId, ex.getMessage());
+        }
     }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { fetchOrder, type OrderDto } from '../api/orders';
 import PageMeta from '../components/PageMeta';
+import OrderItemReviews from '../components/OrderItemReviews';
 import { useAuth } from '../context/AuthContext';
 import { estimateDeliveryDate, formatDeliveryDate } from '../config/site';
 
@@ -46,7 +47,9 @@ export default function OrderConfirmationPage() {
     void load();
   }, [orderNumber, token, state.email]);
 
-  const estimatedDelivery = formatDeliveryDate(estimateDeliveryDate());
+  const estimatedDelivery = formatDeliveryDate(
+    order?.estimatedDeliveryAt ? new Date(order.estimatedDeliveryAt) : estimateDeliveryDate()
+  );
 
   return (
     <>
@@ -75,6 +78,7 @@ export default function OrderConfirmationPage() {
               </p>
               <p className="mt-3 text-sm">
                 Estimated delivery: <strong>{estimatedDelivery}</strong>
+                {order.deliveryOptionName ? ` · ${order.deliveryOptionName}` : ''}
               </p>
               <p className="mt-2 text-sm text-gray-300">
                 A confirmation email has been sent to {order.email}.
@@ -93,11 +97,25 @@ export default function OrderConfirmationPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-4 flex justify-between border-t border-gray-700 pt-4 font-bold">
-                <span>Total (excl. shipping)</span>
-                <span className="text-primary">€{Number(order.totalAmount).toFixed(2)}</span>
+              <div className="mt-4 space-y-2 border-t border-gray-700 pt-4 text-sm">
+                <div className="flex justify-between text-gray-300">
+                  <span>Merchandise</span>
+                  <span>€{Number(order.totalAmount).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-300">
+                  <span>{order.deliveryOptionName ?? 'Shipping'}</span>
+                  <span>€{Number(order.shippingAmount ?? 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Total</span>
+                  <span className="text-primary">
+                    €{(Number(order.totalAmount) + Number(order.shippingAmount ?? 0)).toFixed(2)}
+                  </span>
+                </div>
               </div>
             </section>
+
+            <OrderItemReviews order={order} />
 
             <div className="flex flex-wrap gap-3">
               <Link to="/products" className="rounded-lg bg-primary px-5 py-2.5 font-semibold text-white hover:bg-primary-focus">

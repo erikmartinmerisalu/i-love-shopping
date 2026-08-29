@@ -5,6 +5,7 @@ import com.lampify.dto.OrderDto;
 import com.lampify.dto.ValidationErrorResponse;
 import com.lampify.entity.Cart;
 import com.lampify.entity.CartItem;
+import com.lampify.entity.DeliveryOption;
 import com.lampify.entity.Order;
 import com.lampify.entity.OrderItem;
 import com.lampify.entity.OrderStatus;
@@ -12,8 +13,10 @@ import com.lampify.entity.PaymentMethod;
 import com.lampify.entity.Product;
 import com.lampify.entity.User;
 import com.lampify.repository.CartRepository;
+import com.lampify.repository.DeliveryOptionRepository;
 import com.lampify.repository.OrderRepository;
 import com.lampify.repository.ProductRepository;
+import com.lampify.repository.ReviewRepository;
 import com.lampify.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +50,12 @@ class OrderServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private DeliveryOptionRepository deliveryOptionRepository;
+
+    @Mock
+    private ReviewRepository reviewRepository;
+
+    @Mock
     private EmailService emailService;
 
     @InjectMocks
@@ -78,6 +87,14 @@ class OrderServiceTest {
 
         guestCart.getItems().add(itemA);
         guestCart.getItems().add(itemB);
+
+        DeliveryOption shipping = new DeliveryOption();
+        shipping.setId(1L);
+        shipping.setName("Standard shipping");
+        shipping.setPrice(new BigDecimal("4.99"));
+        shipping.setEstimatedDays(5);
+        shipping.setActive(true);
+        lenient().when(deliveryOptionRepository.findById(1L)).thenReturn(Optional.of(shipping));
     }
 
     @Test
@@ -91,6 +108,20 @@ class OrderServiceTest {
         assertNotNull(errors);
         assertEquals("Invalid email format", errors.getFieldErrors().get("email"));
         assertEquals("Invalid phone format", errors.getFieldErrors().get("phone"));
+    }
+
+    @Test
+    void validateCheckoutAcceptsEstonianVillageAddress() {
+        CheckoutRequest request = validCheckout();
+        request.setFullName("Erik-Martin Merisalu");
+        request.setEmail("erikmartinmerisalu@gmail.com");
+        request.setPhone("+3725240911");
+        request.setAddressLine1("Sireli tee 3");
+        request.setCity("PRINGI KÜLA, VIIMSI");
+        request.setPostalCode("74011");
+        request.setCountry("Estonia");
+
+        assertNull(orderService.validateCheckout(request));
     }
 
     @Test
@@ -114,6 +145,8 @@ class OrderServiceTest {
 
         // 2 * 20.00 + 1 * 15.50 = 55.50
         assertEquals(new BigDecimal("55.50"), dto.getTotalAmount());
+        assertEquals(new BigDecimal("4.99"), dto.getShippingAmount());
+        assertEquals("Standard shipping", dto.getDeliveryOptionName());
         assertEquals(2, dto.getItems().size());
         assertEquals(OrderStatus.PENDING_PAYMENT.name(), dto.getStatus());
         assertEquals(8, productA.getStockQuantity());
@@ -240,6 +273,7 @@ class OrderServiceTest {
         request.setPostalCode("10111");
         request.setCountry("Estonia");
         request.setPaymentMethod("CARD");
+        request.setDeliveryOptionId(1L);
         return request;
     }
 

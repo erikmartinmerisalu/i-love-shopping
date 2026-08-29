@@ -13,6 +13,7 @@ import com.lampify.repository.RefreshTokenRepository;
 import com.lampify.repository.TwoFactorBackupCodeRepository;
 import com.lampify.repository.UserRepository;
 import com.lampify.security.JwtUtil;
+import com.lampify.security.TokenHashes;
 import com.lampify.utils.CaptchaValidator;
 import com.lampify.utils.OAuthTokenValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -181,7 +182,7 @@ public class AuthService {
             return failure("Refresh token is required");
         }
 
-        Optional<RefreshToken> tokenOptional = refreshTokenRepository.findByToken(refreshTokenValue);
+        Optional<RefreshToken> tokenOptional = findRefreshToken(refreshTokenValue);
         if (tokenOptional.isEmpty()) {
             return failure("Refresh token not found");
         }
@@ -202,7 +203,7 @@ public class AuthService {
     @Transactional
     public AuthResponse logout(String refreshTokenValue, String accessToken) {
         if (refreshTokenValue != null) {
-            refreshTokenRepository.findByToken(refreshTokenValue).ifPresent(token -> {
+            findRefreshToken(refreshTokenValue).ifPresent(token -> {
                 token.setRevoked(true);
                 token.setUsed(true);
                 refreshTokenRepository.save(token);
@@ -545,14 +546,24 @@ public class AuthService {
     }
 
     private String createRefreshToken(User user) {
+        String rawToken = UUID.randomUUID().toString();
         RefreshToken token = new RefreshToken();
         token.setUser(user);
-        token.setToken(UUID.randomUUID().toString());
+        token.setToken(TokenHashes.sha256Hex(rawToken));
         token.setExpiresAt(Instant.now().plus(7, ChronoUnit.DAYS));
         token.setRevoked(false);
         token.setUsed(false);
         refreshTokenRepository.save(token);
-        return token.getToken();
+        return rawToken;
+    }
+
+    private Optional<RefreshToken> findRefreshToken(String rawValue) {
+        String hashed = TokenHashes.sha256Hex(rawValue);
+        Optional<RefreshToken> byHash = refreshTokenRepository.findByToken(hashed);
+        if (byHash.isPresent()) {
+            return byHash;
+        }
+        return refreshTokenRepository.findByToken(rawValue);
     }
 
     private AuthResponse success(String message) {

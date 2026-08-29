@@ -138,6 +138,8 @@ public class ProductService {
         image.setProduct(product);
         image.setFileName(storedFile.fileName());
         image.setUrlPath(storedFile.urlPath());
+        image.setThumbPath(storedFile.thumbPath());
+        image.setMediumPath(storedFile.mediumPath());
         image.setPrimaryImage(makePrimary || product.getImages().isEmpty());
         image.setSortOrder(product.getImages().size());
         product.getImages().add(image);
@@ -191,6 +193,7 @@ public class ProductService {
         dto.setReviewCount(product.getReviewCount());
         dto.setCategory(toCategoryDto(product.getCategory()));
         dto.setImageUrls(product.getImages().stream().map(ProductImage::getUrlPath).toList());
+        dto.setThumbnailUrls(product.getImages().stream().map(ProductImage::effectiveThumbPath).toList());
         dto.setSku(product.getSku());
         dto.setActive(product.isActive());
         dto.setFeatured(product.isFeatured());
@@ -213,19 +216,19 @@ public class ProductService {
     }
 
     private String resolvePrimaryImage(Product product) {
-        String url = product.getImages().stream()
+        ProductImage primary = product.getImages().stream()
                 .filter(ProductImage::isPrimaryImage)
-                .map(ProductImage::getUrlPath)
                 .findFirst()
-                .orElse(product.getImages().stream()
-                        .map(ProductImage::getUrlPath)
-                        .findFirst()
-                        .orElse(null));
-
-        if (url != null && fileStorageService.productImageExists(url)) {
-            return url;
+                .orElseGet(() -> product.getImages().stream().findFirst().orElse(null));
+        if (primary == null) {
+            return null;
         }
 
+        for (String url : List.of(primary.effectiveMediumPath(), primary.getUrlPath(), primary.effectiveThumbPath())) {
+            if (url != null && fileStorageService.productImageExists(url)) {
+                return url;
+            }
+        }
         return null;
     }
 

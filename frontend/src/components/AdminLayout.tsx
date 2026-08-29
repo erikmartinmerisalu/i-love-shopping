@@ -1,5 +1,6 @@
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import { SITE } from '../config/site';
+import AdminReviewsNav from './AdminReviewsNav';
 
 const adminLinkClass = ({ isActive }: { isActive: boolean }) =>
   `block rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -24,12 +25,13 @@ export default function AdminLayout() {
       <div className="page-container grid gap-6 py-8 lg:grid-cols-[14rem_1fr]">
         <nav className="h-fit rounded-xl border border-white/10 bg-gray-900/60 p-3" aria-label="Admin navigation">
           <ul className="space-y-1">
+            <AdminReviewsNav />
             <li><NavLink to="/admin" end className={adminLinkClass}>Dashboard</NavLink></li>
             <li><NavLink to="/admin/products" className={adminLinkClass}>Products</NavLink></li>
             <li><NavLink to="/admin/categories" className={adminLinkClass}>Categories</NavLink></li>
+            <li><NavLink to="/admin/delivery" className={adminLinkClass}>Delivery</NavLink></li>
             <li><NavLink to="/admin/orders" className={adminLinkClass}>Orders</NavLink></li>
             <li><NavLink to="/admin/users" className={adminLinkClass}>Users</NavLink></li>
-            <li><NavLink to="/admin/reviews" className={adminLinkClass}>Reviews</NavLink></li>
           </ul>
         </nav>
 

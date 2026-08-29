@@ -11,6 +11,7 @@ import com.lampify.repository.RefreshTokenRepository;
 import com.lampify.repository.TwoFactorBackupCodeRepository;
 import com.lampify.repository.UserRepository;
 import com.lampify.security.JwtUtil;
+import com.lampify.security.TokenHashes;
 import com.lampify.utils.CaptchaValidator;
 import com.lampify.utils.OAuthTokenValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -163,7 +164,7 @@ class AuthServiceTest {
             user.setId(1L);
             return user;
         });
-        when(jwtUtil.generateToken(anyString())).thenReturn("access-token");
+        when(jwtUtil.generateToken(anyString(), anyString())).thenReturn("access-token");
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> {
             RefreshToken token = invocation.getArgument(0);
             token.setToken("refresh-token");
@@ -180,6 +181,29 @@ class AuthServiceTest {
     }
 
     @Test
+    void registerStoresHashedRefreshToken() {
+        AuthRequest request = new AuthRequest();
+        request.setEmail("user@example.com");
+        request.setPassword("StrongP@ss1");
+        request.setConfirmPassword("StrongP@ss1");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(1L);
+            return user;
+        });
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AuthResponse response = authService.register(request);
+
+        ArgumentCaptor<RefreshToken> tokenCaptor = ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository).save(tokenCaptor.capture());
+        assertEquals(TokenHashes.sha256Hex(response.getRefreshToken()), tokenCaptor.getValue().getToken());
+        assertNotEquals(response.getRefreshToken(), tokenCaptor.getValue().getToken());
+    }
+
+    @Test
     void refreshTokenMarksOldTokenUsedAndIssuesNewToken() {
         User user = buildUser();
         RefreshToken existing = new RefreshToken();
@@ -189,8 +213,8 @@ class AuthServiceTest {
         existing.setRevoked(false);
         existing.setUsed(false);
 
-        when(refreshTokenRepository.findByToken("old-refresh")).thenReturn(Optional.of(existing));
-        when(jwtUtil.generateToken(user.getEmail())).thenReturn("new-access");
+        when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.of(existing));
+        when(jwtUtil.generateToken(anyString(), anyString())).thenReturn("new-access");
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AuthResponse response = authService.refreshToken("old-refresh");
@@ -209,7 +233,7 @@ class AuthServiceTest {
         existing.setRevoked(true);
         existing.setExpiresAt(Instant.now().plusSeconds(3600));
 
-        when(refreshTokenRepository.findByToken("used-token")).thenReturn(Optional.of(existing));
+        when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.of(existing));
 
         AuthResponse response = authService.refreshToken("used-token");
 
@@ -222,7 +246,7 @@ class AuthServiceTest {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken("refresh-token");
 
-        when(refreshTokenRepository.findByToken("refresh-token")).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.of(refreshToken));
         when(jwtUtil.validateToken("access-token")).thenReturn(true);
         when(jwtUtil.getJtiFromToken("access-token")).thenReturn("jti-123");
         when(jwtUtil.getExpirationFromToken("access-token")).thenReturn(new java.util.Date(System.currentTimeMillis() + 60_000));
@@ -327,7 +351,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(totpService.verifyCode("secret", "123456")).thenReturn(true);
-        when(jwtUtil.generateToken(user.getEmail())).thenReturn("access-token");
+        when(jwtUtil.generateToken(anyString(), anyString())).thenReturn("access-token");
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> {
             RefreshToken token = invocation.getArgument(0);
             token.setToken("refresh-token");

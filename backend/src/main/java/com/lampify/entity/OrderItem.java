@@ -1,5 +1,6 @@
 package com.lampify.entity;
 
+import com.lampify.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,7 +27,8 @@ public class OrderItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "product_name", nullable = false)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "product_name", nullable = false, length = 1024)
     private String productName;
 
     @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)

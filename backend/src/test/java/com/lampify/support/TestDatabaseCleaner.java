@@ -2,9 +2,11 @@ package com.lampify.support;
 
 import com.lampify.repository.CartRepository;
 import com.lampify.repository.CategoryRepository;
+import com.lampify.repository.DeliveryOptionRepository;
 import com.lampify.repository.OrderRepository;
 import com.lampify.repository.PaymentTransactionRepository;
 import com.lampify.repository.ProductRepository;
+import com.lampify.repository.RefreshTokenRepository;
 import com.lampify.repository.ReviewHelpfulVoteRepository;
 import com.lampify.repository.ReviewRepository;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,8 @@ public class TestDatabaseCleaner {
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final DeliveryOptionRepository deliveryOptionRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public TestDatabaseCleaner(
             PaymentTransactionRepository paymentTransactionRepository,
@@ -30,7 +34,9 @@ public class TestDatabaseCleaner {
             ReviewHelpfulVoteRepository reviewHelpfulVoteRepository,
             ReviewRepository reviewRepository,
             ProductRepository productRepository,
-            CategoryRepository categoryRepository) {
+            CategoryRepository categoryRepository,
+            DeliveryOptionRepository deliveryOptionRepository,
+            RefreshTokenRepository refreshTokenRepository) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
@@ -38,6 +44,8 @@ public class TestDatabaseCleaner {
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.deliveryOptionRepository = deliveryOptionRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public void resetCatalogData() {
@@ -48,5 +56,7 @@ public class TestDatabaseCleaner {
         cartRepository.deleteAll();
         productRepository.deleteAll();
         categoryRepository.deleteAll();
+        deliveryOptionRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
     }
 }

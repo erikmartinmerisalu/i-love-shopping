@@ -12,9 +12,11 @@ import java.time.LocalDateTime;
 public class ReviewDto {
     private Long id;
     private Long productId;
+    private String productName;
     private int rating;
     private String body;
     private String authorName;
+    private String authorUsername;
     private LocalDateTime createdAt;
     private long helpfulCount;
     private boolean helpfulByCurrentUser;

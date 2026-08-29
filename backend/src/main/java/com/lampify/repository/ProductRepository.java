@@ -83,6 +83,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Product
             @Param("excludeId") Long excludeId,
             Pageable pageable);
 
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.images")
+    List<Product> findAllWithImages();
+
     Page<Product> findAllByOrderByNameAsc(Pageable pageable);
 
     long countByActiveTrue();

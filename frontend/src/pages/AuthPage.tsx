@@ -216,9 +216,9 @@ const AuthPage = () => {
               <span className="inline-flex rounded-full border border-slate-700 bg-sky-400/10 px-4 py-1 text-sm tracking-[0.18em] text-sky-300">
                 💡 ESTValgus
               </span>
-              <h1 className="mt-8 text-4xl font-semibold leading-tight">
+              <p className="mt-8 text-4xl font-semibold leading-tight">
                 Illuminate Your Space with Custom Lighting
-              </h1>
+              </p>
               <p className="mt-4 max-w-lg text-slate-400">
                 Discover premium lighting solutions for your home. Browse our collection of smart bulbs, desk lamps, pendants, and more. Create the perfect ambiance with our curated selection.
               </p>
@@ -235,7 +235,7 @@ const AuthPage = () => {
 
           <div className="flex flex-col justify-center p-8 sm:p-10">
             <div className="mb-8 lg:hidden text-center">
-              <h1 className="text-3xl font-bold text-white mb-2">💡 ESTValgus</h1>
+              <p className="text-3xl font-bold text-white mb-2">💡 ESTValgus</p>
               <p className="text-slate-400 text-sm">Illuminate Your Space</p>
             </div>
 
@@ -244,9 +244,9 @@ const AuthPage = () => {
                 <>
                   <div>
                     <p className="text-sm uppercase tracking-[0.24em] text-sky-300">Secure access</p>
-                    <h2 className="mt-2 text-3xl font-semibold text-white">
+                    <h1 className="mt-2 text-3xl font-semibold text-white">
                       {mode === "login" ? "Sign in to ESTValgus" : "Create your ESTValgus account"}
-                    </h2>
+                    </h1>
                   </div>
                   <div className="rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-300">
                     {mode === "login" ? "No account yet?" : "Already have an account?"}{" "}

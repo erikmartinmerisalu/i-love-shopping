@@ -92,8 +92,12 @@ export default function ProductDetailPage() {
     );
   }
 
-  const images = product.imageUrls.length > 0 ? product.imageUrls : [null];
-  const mainImage = resolveProductImageUrl(images[selectedImage], CustomDesign);
+  const fullImages = product.imageUrls.length > 0 ? product.imageUrls : [null];
+  const thumbImages =
+    product.thumbnailUrls && product.thumbnailUrls.length > 0
+      ? product.thumbnailUrls
+      : fullImages;
+  const mainImage = resolveProductImageUrl(fullImages[selectedImage], CustomDesign);
 
   return (
     <>
@@ -128,9 +132,9 @@ export default function ProductDetailPage() {
                 className="h-[20rem] w-full object-cover sm:h-[28rem]"
               />
             </div>
-            {images.length > 1 && (
+            {fullImages.length > 1 && (
               <div className="mt-4 flex gap-3 overflow-x-auto">
-                {images.map((url, index) => (
+                {thumbImages.map((url, index) => (
                   <button
                     key={`${url ?? 'placeholder'}-${index}`}
                     type="button"

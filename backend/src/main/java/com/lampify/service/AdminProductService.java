@@ -1,6 +1,9 @@
 package com.lampify.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lampify.dto.AdminProductRequest;
+import com.lampify.dto.BulkProductRow;
 import com.lampify.dto.BulkUploadResult;
 import com.lampify.dto.ProductDetailDto;
 import com.lampify.dto.ProductDto;
@@ -17,13 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -33,16 +32,19 @@ public class AdminProductService {
     private final CategoryRepository categoryRepository;
     private final ProductService productService;
     private final AdminAuthorizationService adminAuthorizationService;
+    private final ObjectMapper objectMapper;
 
     public AdminProductService(
             ProductRepository productRepository,
             CategoryRepository categoryRepository,
             ProductService productService,
-            AdminAuthorizationService adminAuthorizationService) {
+            AdminAuthorizationService adminAuthorizationService,
+            ObjectMapper objectMapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productService = productService;
         this.adminAuthorizationService = adminAuthorizationService;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -112,71 +114,126 @@ public class AdminProductService {
             return result;
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            String header = reader.readLine();
-            if (header == null) {
-                result.getErrors().add("CSV header row is missing");
-                return result;
-            }
+        String originalName = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
+        String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
+        String body = new String(file.getBytes(), StandardCharsets.UTF_8).strip();
+        boolean json = originalName.endsWith(".json")
+                || contentType.contains("json")
+                || body.startsWith("[");
 
-            String line;
-            int rowNumber = 1;
-            while ((line = reader.readLine()) != null) {
-                rowNumber++;
-                if (line.isBlank()) {
-                    continue;
-                }
-
-                try {
-                    upsertCsvRow(line, result, rowNumber);
-                } catch (Exception ex) {
-                    result.setSkipped(result.getSkipped() + 1);
-                    result.getErrors().add("Row " + rowNumber + ": " + ex.getMessage());
-                }
-            }
+        if (json) {
+            importJson(body, result);
+        } else {
+            importCsv(body, result);
         }
-
         return result;
     }
 
-    private void upsertCsvRow(String line, BulkUploadResult result, int rowNumber) {
+    private void importCsv(String body, BulkUploadResult result) {
+        String[] lines = body.split("\\R");
+        if (lines.length == 0 || lines[0].isBlank()) {
+            result.getErrors().add("CSV header row is missing");
+            return;
+        }
+
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i];
+            if (line.isBlank()) {
+                continue;
+            }
+            int rowNumber = i + 1;
+            try {
+                upsertRow(fromCsvLine(line), result);
+            } catch (Exception ex) {
+                result.setSkipped(result.getSkipped() + 1);
+                result.getErrors().add("Row " + rowNumber + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    private void importJson(String body, BulkUploadResult result) throws IOException {
+        JsonNode root = objectMapper.readTree(body);
+        if (root == null || !root.isArray()) {
+            result.getErrors().add("JSON upload must be an array of product objects");
+            result.setSkipped(1);
+            return;
+        }
+
+        int index = 0;
+        for (JsonNode node : root) {
+            index++;
+            try {
+                BulkProductRow row = objectMapper.treeToValue(node, BulkProductRow.class);
+                upsertRow(row, result);
+            } catch (Exception ex) {
+                result.setSkipped(result.getSkipped() + 1);
+                result.getErrors().add("Item " + index + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    private BulkProductRow fromCsvLine(String line) {
         String[] parts = line.split(",", -1);
         if (parts.length < 8) {
             throw new IllegalArgumentException("Expected at least 8 columns");
         }
-
-        String name = parts[0].trim();
-        String description = parts[1].trim();
-        BigDecimal price = new BigDecimal(parts[2].trim());
-        int stock = Integer.parseInt(parts[3].trim());
-        String brand = parts[4].trim();
-        String categorySlug = parts[5].trim().toLowerCase(Locale.ROOT);
-        String sku = parts[6].trim();
-        boolean active = true;
+        BulkProductRow row = new BulkProductRow();
+        row.setName(parts[0].trim());
+        row.setDescription(parts[1].trim());
+        row.setPrice(new BigDecimal(parts[2].trim()));
+        row.setStockQuantity(Integer.parseInt(parts[3].trim()));
+        row.setBrand(parts[4].trim());
+        row.setCategorySlug(parts[5].trim());
+        row.setSku(parts[6].trim());
         if (parts.length > 7 && !parts[7].isBlank()) {
-            active = Boolean.parseBoolean(parts[7].trim());
+            row.setActive(Boolean.parseBoolean(parts[7].trim()));
         }
         if (parts.length > 8 && !parts[8].isBlank()) {
-            // featured column optional
+            row.setFeatured(Boolean.parseBoolean(parts[8].trim()));
+        }
+        return row;
+    }
+
+    private void upsertRow(BulkProductRow row, BulkUploadResult result) {
+        if (row.getName() == null || row.getName().isBlank()) {
+            throw new IllegalArgumentException("Name is required");
+        }
+        if (row.getDescription() == null || row.getDescription().isBlank()) {
+            throw new IllegalArgumentException("Description is required");
+        }
+        if (row.getPrice() == null) {
+            throw new IllegalArgumentException("Price is required");
+        }
+        if (row.getStockQuantity() == null) {
+            throw new IllegalArgumentException("Stock quantity is required");
+        }
+        if (row.getBrand() == null || row.getBrand().isBlank()) {
+            throw new IllegalArgumentException("Brand is required");
+        }
+        if (row.getCategorySlug() == null || row.getCategorySlug().isBlank()) {
+            throw new IllegalArgumentException("Category slug is required");
         }
 
+        String categorySlug = row.getCategorySlug().trim().toLowerCase(Locale.ROOT);
         Category category = categoryRepository.findBySlug(categorySlug)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown category slug: " + categorySlug));
 
-        Product product = (sku.isBlank() ? null : productRepository.findBySku(sku).orElse(null));
+        String sku = row.getSku() == null ? "" : row.getSku().trim();
+        Product product = sku.isBlank() ? null : productRepository.findBySku(sku).orElse(null);
         boolean created = product == null;
         if (product == null) {
             product = new Product();
         }
 
-        product.setName(name);
-        product.setDescription(description);
-        product.setPrice(price);
-        product.setStockQuantity(stock);
-        product.setBrand(brand);
+        product.setName(row.getName().trim());
+        product.setDescription(row.getDescription().trim());
+        product.setPrice(row.getPrice());
+        product.setStockQuantity(row.getStockQuantity());
+        product.setBrand(row.getBrand().trim());
         product.setCategory(category);
         product.setSku(sku.isBlank() ? null : sku);
-        product.setActive(active);
+        product.setActive(row.getActive() == null || row.getActive());
+        product.setFeatured(Boolean.TRUE.equals(row.getFeatured()));
         productRepository.save(product);
 
         if (created) {

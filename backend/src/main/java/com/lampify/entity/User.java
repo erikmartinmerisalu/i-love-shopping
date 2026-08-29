@@ -1,5 +1,6 @@
 package com.lampify.entity;
 
+import com.lampify.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,7 +43,8 @@ public class User {
     @Column(nullable = false)
     private boolean twoFactorEnabled = false;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 512)
+    @Convert(converter = EncryptedStringConverter.class)
     private String twoFactorSecret;
 
     @Column(nullable = true)

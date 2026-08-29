@@ -17,5 +17,9 @@ frontend/dist/
 .env
 frontend/.env.local
 
+# Self-signed TLS material (generated locally)
+certs/*.key
+certs/*.crt
+
 # Dependencies
 node_modules/

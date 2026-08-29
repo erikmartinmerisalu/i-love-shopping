@@ -29,6 +29,13 @@ export type AdminRefundPayload = {
   reason?: string;
 };
 
+export type AdminDeliveryOptionPayload = {
+  name: string;
+  price: number;
+  estimatedDays: number;
+  active: boolean;
+};
+
 export const ORDER_STATUSES = [
   'PENDING_PAYMENT',
   'PAID',

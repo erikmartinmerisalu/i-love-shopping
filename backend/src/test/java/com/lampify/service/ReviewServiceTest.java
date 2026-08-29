@@ -63,6 +63,7 @@ class ReviewServiceTest {
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(reviewRepository.existsByUserIdAndProductId(10L, 1L)).thenReturn(false);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
         when(orderRepository.userPurchasedProduct(eq(10L), eq(1L), eq(100L), anyCollection())).thenReturn(false);
 
         SubmitReviewRequest request = new SubmitReviewRequest(1L, 100L, 5, "Great lamp, very bright and stylish.");
@@ -77,8 +78,8 @@ class ReviewServiceTest {
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(reviewRepository.existsByUserIdAndProductId(10L, 1L)).thenReturn(false);
-        when(orderRepository.userPurchasedProduct(eq(10L), eq(1L), eq(100L), anyCollection())).thenReturn(true);
         when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.userPurchasedProduct(eq(10L), eq(1L), eq(100L), anyCollection())).thenReturn(true);
         when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
             Review saved = invocation.getArgument(0);
             saved.setId(50L);

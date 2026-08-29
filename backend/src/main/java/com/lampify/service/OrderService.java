@@ -7,6 +7,7 @@ import com.lampify.dto.OrderStatusHistoryDto;
 import com.lampify.dto.ValidationErrorResponse;
 import com.lampify.entity.Cart;
 import com.lampify.entity.CartItem;
+import com.lampify.entity.DeliveryOption;
 import com.lampify.entity.Order;
 import com.lampify.entity.OrderItem;
 import com.lampify.entity.OrderStatus;
@@ -15,41 +16,40 @@ import com.lampify.entity.PaymentMethod;
 import com.lampify.entity.Product;
 import com.lampify.entity.User;
 import com.lampify.repository.CartRepository;
+import com.lampify.repository.DeliveryOptionRepository;
 import com.lampify.repository.OrderRepository;
 import com.lampify.repository.ProductRepository;
+import com.lampify.repository.ReviewRepository;
 import com.lampify.repository.UserRepository;
+import com.lampify.validation.CheckoutFieldValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class OrderService {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-    private static final Pattern PHONE_PATTERN =
-            Pattern.compile("^[+]?[0-9\\s()-]{7,20}$");
-    private static final Pattern POSTAL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9][A-Za-z0-9\\s-]{2,11}$");
-    private static final Pattern ADDRESS_PATTERN =
-            Pattern.compile("^[\\p{L}0-9\\s.,'/\\-]{5,255}$");
-
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+    private static final List<OrderStatus> REVIEWABLE_STATUSES = List.of(
+            OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED);
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final DeliveryOptionRepository deliveryOptionRepository;
+    private final ReviewRepository reviewRepository;
     private final EmailService emailService;
 
     public OrderService(
@@ -57,70 +57,33 @@ public class OrderService {
             CartRepository cartRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
+            DeliveryOptionRepository deliveryOptionRepository,
+            ReviewRepository reviewRepository,
             EmailService emailService) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.deliveryOptionRepository = deliveryOptionRepository;
+        this.reviewRepository = reviewRepository;
         this.emailService = emailService;
     }
 
     public ValidationErrorResponse validateCheckout(CheckoutRequest request) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
 
-        String fullName = trim(request.getFullName());
-        String email = trim(request.getEmail());
-        String phone = trim(request.getPhone());
-        String addressLine1 = trim(request.getAddressLine1());
-        String city = trim(request.getCity());
-        String postalCode = trim(request.getPostalCode());
-        String country = trim(request.getCountry());
-        String paymentMethod = trim(request.getPaymentMethod());
+        String paymentMethod = CheckoutFieldValidator.normalize(request.getPaymentMethod());
 
-        if (fullName == null || fullName.isBlank()) {
-            fieldErrors.put("fullName", "Full name is required");
-        } else if (fullName.length() < 2) {
-            fieldErrors.put("fullName", "Full name must be at least 2 characters");
-        }
-
-        if (email == null || email.isBlank()) {
-            fieldErrors.put("email", "Email is required");
-        } else if (!EMAIL_PATTERN.matcher(email).matches()) {
-            fieldErrors.put("email", "Invalid email format");
-        }
-
-        if (phone == null || phone.isBlank()) {
-            fieldErrors.put("phone", "Phone is required");
-        } else if (!PHONE_PATTERN.matcher(phone).matches()) {
-            fieldErrors.put("phone", "Invalid phone format");
-        }
-
-        if (addressLine1 == null || addressLine1.isBlank()) {
-            fieldErrors.put("addressLine1", "Address is required");
-        } else if (!ADDRESS_PATTERN.matcher(addressLine1).matches()) {
-            fieldErrors.put("addressLine1", "Invalid address format");
-        }
-
-        String addressLine2 = trim(request.getAddressLine2());
-        if (addressLine2 != null && !addressLine2.isBlank() && !ADDRESS_PATTERN.matcher(addressLine2).matches()) {
-            fieldErrors.put("addressLine2", "Invalid address format");
-        }
-
-        if (city == null || city.isBlank()) {
-            fieldErrors.put("city", "City is required");
-        } else if (city.length() < 2) {
-            fieldErrors.put("city", "Invalid city");
-        }
-
-        if (postalCode == null || postalCode.isBlank()) {
-            fieldErrors.put("postalCode", "Postal code is required");
-        } else if (!POSTAL_PATTERN.matcher(postalCode).matches()) {
-            fieldErrors.put("postalCode", "Invalid postal code format");
-        }
-
-        if (country == null || country.isBlank()) {
-            fieldErrors.put("country", "Country is required");
-        }
+        CheckoutFieldValidator.collectFieldErrors(
+                request.getFullName(),
+                request.getEmail(),
+                request.getPhone(),
+                request.getAddressLine1(),
+                request.getAddressLine2(),
+                request.getCity(),
+                request.getPostalCode(),
+                request.getCountry(),
+                fieldErrors);
 
         if (paymentMethod == null || paymentMethod.isBlank()) {
             fieldErrors.put("paymentMethod", "Payment method is required");
@@ -129,6 +92,15 @@ public class OrderService {
                 PaymentMethod.valueOf(paymentMethod.toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ex) {
                 fieldErrors.put("paymentMethod", "Invalid payment method");
+            }
+        }
+
+        if (request.getDeliveryOptionId() == null) {
+            fieldErrors.put("deliveryOptionId", "Shipping option is required");
+        } else {
+            DeliveryOption option = deliveryOptionRepository.findById(request.getDeliveryOptionId()).orElse(null);
+            if (option == null || !option.isActive()) {
+                fieldErrors.put("deliveryOptionId", "Invalid shipping option");
             }
         }
 
@@ -160,21 +132,27 @@ public class OrderService {
                 : null;
 
         PaymentMethod paymentMethod = PaymentMethod.valueOf(
-                request.getPaymentMethod().trim().toUpperCase(Locale.ROOT));
+                CheckoutFieldValidator.normalize(request.getPaymentMethod()).toUpperCase(Locale.ROOT));
 
         Order order = new Order();
         order.setOrderNumber(generateOrderNumber());
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING_PAYMENT);
         order.setPaymentMethod(paymentMethod);
-        order.setFullName(request.getFullName().trim());
-        order.setEmail(request.getEmail().trim().toLowerCase(Locale.ROOT));
-        order.setPhone(request.getPhone().trim());
-        order.setAddressLine1(request.getAddressLine1().trim());
+        order.setFullName(CheckoutFieldValidator.normalize(request.getFullName()));
+        order.setEmail(CheckoutFieldValidator.normalize(request.getEmail()).toLowerCase(Locale.ROOT));
+        order.setPhone(CheckoutFieldValidator.normalizePhone(request.getPhone()));
+        order.setAddressLine1(CheckoutFieldValidator.normalize(request.getAddressLine1()));
         order.setAddressLine2(blankToNull(request.getAddressLine2()));
-        order.setCity(request.getCity().trim());
-        order.setPostalCode(request.getPostalCode().trim());
-        order.setCountry(request.getCountry().trim());
+        order.setCity(CheckoutFieldValidator.normalize(request.getCity()));
+        order.setPostalCode(CheckoutFieldValidator.normalize(request.getPostalCode()));
+        order.setCountry(CheckoutFieldValidator.normalize(request.getCountry()));
+
+        DeliveryOption deliveryOption = deliveryOptionRepository.findById(request.getDeliveryOptionId())
+                .filter(DeliveryOption::isActive)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid shipping option"));
+        order.setDeliveryOption(deliveryOption);
+        order.setEstimatedDeliveryAt(LocalDateTime.now().plusDays(deliveryOption.getEstimatedDays()));
 
         BigDecimal total = BigDecimal.ZERO;
 
@@ -264,13 +242,33 @@ public class OrderService {
         return toDto(order);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public OrderDto getOrderForViewer(String orderNumber, String userEmail, String emailHint) {
         Order order = orderRepository.findByOrderNumberWithItems(orderNumber)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         order.getStatusHistory().size();
+        claimGuestOrderIfEligible(order, userEmail);
         assertCanView(order, userEmail, emailHint);
         return toDto(order);
+    }
+
+    /**
+     * Guest checkouts store no user_id. If the signed-in account uses the same email,
+     * attach the order so reviews and "My orders" work.
+     */
+    private void claimGuestOrderIfEligible(Order order, String userEmail) {
+        if (order.getUser() != null || userEmail == null || userEmail.isBlank()) {
+            return;
+        }
+        if (!matchesOrderEmail(order, userEmail)) {
+            return;
+        }
+        User viewer = userRepository.findByEmail(userEmail.trim().toLowerCase(Locale.ROOT)).orElse(null);
+        if (viewer == null) {
+            return;
+        }
+        order.setUser(viewer);
+        orderRepository.save(order);
     }
 
     /**
@@ -513,8 +511,9 @@ public class OrderService {
         dto.setPostalCode(order.getPostalCode());
         dto.setCountry(order.getCountry());
         dto.setTotalAmount(order.getTotalAmount());
+        applyShipping(dto, order);
         dto.setCreatedAt(order.getCreatedAt() != null ? order.getCreatedAt().format(ISO) : null);
-        dto.setItems(order.getItems().stream().map(this::toItemDto).toList());
+        dto.setItems(order.getItems().stream().map(item -> toItemDto(order, item)).toList());
         dto.setStatusHistory(order.getStatusHistory().stream().map(this::toHistoryDto).toList());
         return dto;
     }
@@ -528,20 +527,49 @@ public class OrderService {
         dto.setFullName(order.getFullName());
         dto.setEmail(order.getEmail());
         dto.setTotalAmount(order.getTotalAmount());
+        applyShipping(dto, order);
         dto.setCreatedAt(order.getCreatedAt() != null ? order.getCreatedAt().format(ISO) : null);
-        dto.setItems(List.of());
+        dto.setItems(order.getItems().stream().map(item -> toItemDto(order, item)).toList());
         dto.setStatusHistory(List.of());
         return dto;
     }
 
-    private OrderItemDto toItemDto(OrderItem item) {
+    private void applyShipping(OrderDto dto, Order order) {
+        if (order.getDeliveryOption() == null) {
+            return;
+        }
+        dto.setDeliveryOptionId(order.getDeliveryOption().getId());
+        dto.setDeliveryOptionName(order.getDeliveryOption().getName());
+        dto.setShippingAmount(order.getDeliveryOption().getPrice());
+        if (order.getEstimatedDeliveryAt() != null) {
+            dto.setEstimatedDeliveryAt(order.getEstimatedDeliveryAt().format(ISO));
+        }
+    }
+
+    private OrderItemDto toItemDto(Order order, OrderItem item) {
         OrderItemDto dto = new OrderItemDto();
-        dto.setProductId(item.getProduct() != null ? item.getProduct().getId() : null);
+        Long productId = item.getProduct() != null ? item.getProduct().getId() : null;
+        dto.setProductId(productId);
         dto.setProductName(item.getProductName());
         dto.setUnitPrice(item.getUnitPrice());
         dto.setQuantity(item.getQuantity());
         dto.setLineTotal(item.getLineTotal());
+        applyReviewState(dto, order, productId);
         return dto;
+    }
+
+    private void applyReviewState(OrderItemDto dto, Order order, Long productId) {
+        dto.setCanReview(false);
+        if (productId == null || order.getUser() == null || order.getStatus() == null) {
+            return;
+        }
+        if (!REVIEWABLE_STATUSES.contains(order.getStatus())) {
+            return;
+        }
+        reviewRepository.findByUserIdAndProductId(order.getUser().getId(), productId)
+                .ifPresentOrElse(
+                        review -> dto.setReviewStatus(review.getStatus().name()),
+                        () -> dto.setCanReview(true));
     }
 
     private OrderStatusHistoryDto toHistoryDto(OrderStatusHistory history) {
@@ -552,15 +580,8 @@ public class OrderService {
         return dto;
     }
 
-    private static String trim(String value) {
-        return value == null ? null : value.trim();
-    }
-
     private static String blankToNull(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return value.trim();
+        return CheckoutFieldValidator.normalize(value);
     }
 
     public static class CheckoutValidationException extends RuntimeException {

@@ -15,6 +15,15 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findByStatusOrderByCreatedAtAsc(ReviewStatus status);
 
+    @Query("""
+            SELECT DISTINCT r FROM Review r
+            JOIN FETCH r.user
+            JOIN FETCH r.product
+            WHERE r.status = :status
+            ORDER BY r.createdAt ASC
+            """)
+    List<Review> findByStatusWithUserAndProductOrderByCreatedAtAsc(@Param("status") ReviewStatus status);
+
     Optional<Review> findByUserIdAndProductId(Long userId, Long productId);
 
     boolean existsByUserIdAndProductId(Long userId, Long productId);

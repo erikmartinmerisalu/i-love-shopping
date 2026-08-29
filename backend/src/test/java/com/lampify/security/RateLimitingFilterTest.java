@@ -13,6 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -36,8 +37,10 @@ class RateLimitingFilterTest {
     void setUp() {
         filter = new RateLimitingFilter();
         ReflectionTestUtils.setField(filter, "enabled", true);
-        ReflectionTestUtils.setField(filter, "limit", 3);
-        ReflectionTestUtils.setField(filter, "windowSeconds", 60);
+        ReflectionTestUtils.setField(filter, "authCapacity", 3);
+        ReflectionTestUtils.setField(filter, "authRefillSeconds", 3600);
+        ReflectionTestUtils.setField(filter, "contactCapacity", 5);
+        ReflectionTestUtils.setField(filter, "contactRefillSeconds", 60);
         lenient().when(request.getRequestURI()).thenReturn("/api/auth/login");
         lenient().when(request.getRemoteAddr()).thenReturn("127.0.0.1");
     }
@@ -63,6 +66,7 @@ class RateLimitingFilterTest {
 
         verify(filterChain, times(3)).doFilter(request, response);
         verify(response).setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        verify(response).setHeader("Retry-After", "3600");
     }
 
     @Test

@@ -2,10 +2,12 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { CheckoutApiError, placeOrder, type OrderDto } from '../api/orders';
+import { CheckoutApiError, fetchActiveDeliveryOptions, placeOrder, type DeliveryOptionDto, type OrderDto } from '../api/orders';
 import type { PaymentResultResponse } from '../api/payments';
 import PaymentStep from '../components/PaymentStep';
 import {
+  normalizeCheckoutText,
+  normalizePhone,
   validateCheckoutForm,
   type CheckoutFieldErrors,
   type CheckoutFormValues,
@@ -25,8 +27,9 @@ const emptyForm = (): CheckoutFormValues => ({
   addressLine2: '',
   city: '',
   postalCode: '',
-  country: '',
+  country: 'Estonia',
   paymentMethod: 'CARD',
+  deliveryOptionId: '',
 });
 
 const fieldClass = (hasError: boolean) =>
@@ -49,6 +52,13 @@ const CheckoutPage = () => {
   const [paymentResult, setPaymentResult] = useState<PaymentResultResponse | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentSessionKey, setPaymentSessionKey] = useState(0);
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOptionDto[]>([]);
+
+  const selectedDelivery =
+    deliveryOptions.find((option) => option.id === form.deliveryOptionId) ?? null;
+  const shippingAmount = selectedDelivery?.price ?? 0;
+  const merchandiseTotal = totalPrice;
+  const payableTotal = merchandiseTotal + shippingAmount;
 
   const handlePaymentSuccess = (result: PaymentResultResponse) => {
     setPaymentError(null);
@@ -77,6 +87,33 @@ const CheckoutPage = () => {
           : current.fullName,
     }));
   }, [isAuthenticated, user?.email, user?.username]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadShipping = async () => {
+      try {
+        const options = await fetchActiveDeliveryOptions();
+        if (cancelled) {
+          return;
+        }
+        setDeliveryOptions(options);
+        setForm((current) => {
+          if (current.deliveryOptionId !== '' && options.some((option) => option.id === current.deliveryOptionId)) {
+            return current;
+          }
+          return options.length > 0 ? { ...current, deliveryOptionId: options[0].id } : current;
+        });
+      } catch (error) {
+        if (!cancelled) {
+          setFormError(error instanceof CheckoutApiError ? error.message : 'Could not load shipping options');
+        }
+      }
+    };
+    void loadShipping();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updateField = <K extends keyof CheckoutFormValues>(key: K, value: CheckoutFormValues[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -109,15 +146,16 @@ const CheckoutPage = () => {
     setSubmitting(true);
     try {
       const order = await placeOrder(token, {
-        fullName: form.fullName.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        addressLine1: form.addressLine1.trim(),
-        addressLine2: form.addressLine2.trim() || undefined,
-        city: form.city.trim(),
-        postalCode: form.postalCode.trim(),
-        country: form.country.trim(),
+        fullName: normalizeCheckoutText(form.fullName),
+        email: normalizeCheckoutText(form.email),
+        phone: normalizePhone(form.phone),
+        addressLine1: normalizeCheckoutText(form.addressLine1),
+        addressLine2: normalizeCheckoutText(form.addressLine2) || undefined,
+        city: normalizeCheckoutText(form.city),
+        postalCode: normalizeCheckoutText(form.postalCode),
+        country: normalizeCheckoutText(form.country),
         paymentMethod: form.paymentMethod,
+        deliveryOptionId: Number(form.deliveryOptionId),
       });
       setPlacedOrder(order);
       setFieldErrors({});
@@ -165,11 +203,21 @@ const CheckoutPage = () => {
                   </li>
                 ))}
               </ul>
-              <div className="border-t border-gray-700 pt-3 flex justify-between font-bold">
-                <span>Total</span>
-                <span className="text-primary">
-                  €{Number(paymentResult.order.totalAmount).toFixed(2)}
-                </span>
+              <div className="border-t border-gray-700 pt-3 space-y-2 text-sm">
+                <div className="flex justify-between text-gray-300">
+                  <span>Merchandise</span>
+                  <span>€{Number(paymentResult.order.totalAmount).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-300">
+                  <span>{paymentResult.order.deliveryOptionName ?? 'Shipping'}</span>
+                  <span>€{Number(paymentResult.order.shippingAmount ?? 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Total</span>
+                  <span className="text-primary">
+                    €{(Number(paymentResult.order.totalAmount) + Number(paymentResult.order.shippingAmount ?? 0)).toFixed(2)}
+                  </span>
+                </div>
               </div>
             </section>
           )}
@@ -228,9 +276,21 @@ const CheckoutPage = () => {
                 </li>
               ))}
             </ul>
-            <div className="border-t border-gray-700 pt-3 flex justify-between font-bold">
-              <span>Total</span>
-              <span className="text-primary">€{Number(placedOrder.totalAmount).toFixed(2)}</span>
+            <div className="border-t border-gray-700 pt-3 space-y-2 text-sm">
+              <div className="flex justify-between text-gray-300">
+                <span>Merchandise</span>
+                <span>€{Number(placedOrder.totalAmount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-gray-300">
+                <span>{placedOrder.deliveryOptionName ?? 'Shipping'}</span>
+                <span>€{Number(placedOrder.shippingAmount ?? 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>Total</span>
+                <span className="text-primary">
+                  €{(Number(placedOrder.totalAmount) + Number(placedOrder.shippingAmount ?? 0)).toFixed(2)}
+                </span>
+              </div>
             </div>
           </section>
       </div>
@@ -299,7 +359,8 @@ const CheckoutPage = () => {
                   value={form.phone}
                   onChange={(e) => updateField('phone', e.target.value)}
                   autoComplete="tel"
-                  placeholder="+372 5555 5555"
+                  placeholder="+372 5240 911"
+                  inputMode="tel"
                 />
                 {fieldErrors.phone && (
                   <span className="text-xs text-red-400">{fieldErrors.phone}</span>
@@ -376,6 +437,47 @@ const CheckoutPage = () => {
           </section>
 
           <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Shipping</h2>
+            {deliveryOptions.length === 0 ? (
+              <p className="text-sm text-gray-400">No shipping methods are available right now.</p>
+            ) : (
+              <div className="space-y-2">
+                {deliveryOptions.map((option) => (
+                  <label
+                    key={option.id}
+                    className={`flex items-start justify-between gap-3 rounded-lg border px-3 py-3 text-sm cursor-pointer ${
+                      form.deliveryOptionId === option.id
+                        ? 'border-sky-500 bg-sky-500/10'
+                        : 'border-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    <span className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="deliveryOptionId"
+                        value={option.id}
+                        checked={form.deliveryOptionId === option.id}
+                        onChange={() => updateField('deliveryOptionId', option.id)}
+                        className="mt-1 accent-sky-400"
+                      />
+                      <span>
+                        <span className="font-medium">{option.name}</span>
+                        <span className="mt-1 block text-xs text-gray-400">
+                          Estimated {option.estimatedDays} day{option.estimatedDays === 1 ? '' : 's'}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="font-semibold text-primary">€{Number(option.price).toFixed(2)}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {fieldErrors.deliveryOptionId && (
+              <span className="text-xs text-red-400">{fieldErrors.deliveryOptionId}</span>
+            )}
+          </section>
+
+          <section className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-4">
             <h2 className="text-lg font-semibold">Payment method</h2>
             <p className="text-xs text-gray-400">
               After placing the order you will complete payment on a secure form. Stripe uses
@@ -429,7 +531,7 @@ const CheckoutPage = () => {
                   <li key={item.id} className="flex gap-3">
                     <img
                       src={item.image}
-                      alt=""
+                      alt={item.name}
                       className="h-14 w-14 rounded object-cover opacity-80"
                     />
                     <div className="flex-1 min-w-0">
@@ -444,11 +546,21 @@ const CheckoutPage = () => {
                   </li>
                 ))}
               </ul>
-              <div className="border-t border-gray-700 pt-3 flex justify-between font-bold">
-                <span>
-                  {totalItems} item{totalItems === 1 ? '' : 's'}
-                </span>
-                <span className="text-primary">€{totalPrice.toFixed(2)}</span>
+              <div className="space-y-2 border-t border-gray-700 pt-3 text-sm">
+                <div className="flex justify-between text-gray-300">
+                  <span>
+                    Merchandise ({totalItems} item{totalItems === 1 ? '' : 's'})
+                  </span>
+                  <span>€{merchandiseTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-300">
+                  <span>{selectedDelivery ? selectedDelivery.name : 'Shipping'}</span>
+                  <span>€{shippingAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Total</span>
+                  <span className="text-primary">€{payableTotal.toFixed(2)}</span>
+                </div>
               </div>
             </>
           )}

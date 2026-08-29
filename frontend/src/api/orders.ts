@@ -4,6 +4,8 @@ export type OrderItemDto = {
   unitPrice: number;
   quantity: number;
   lineTotal: number;
+  canReview?: boolean;
+  reviewStatus?: string | null;
 };
 
 export type OrderStatusHistoryDto = {
@@ -26,6 +28,10 @@ export type OrderDto = {
   postalCode: string;
   country: string;
   totalAmount: number;
+  shippingAmount?: number | null;
+  deliveryOptionId?: number | null;
+  deliveryOptionName?: string | null;
+  estimatedDeliveryAt?: string | null;
   createdAt: string | null;
   items: OrderItemDto[];
   statusHistory: OrderStatusHistoryDto[];
@@ -41,6 +47,7 @@ export type CheckoutPayload = {
   postalCode: string;
   country: string;
   paymentMethod: string;
+  deliveryOptionId: number;
 };
 
 export type CheckoutErrorBody = {
@@ -92,6 +99,31 @@ export async function placeOrder(
   return data as OrderDto;
 }
 
+export type DeliveryOptionDto = {
+  id: number;
+  name: string;
+  price: number;
+  estimatedDays: number;
+  active: boolean;
+};
+
+export async function fetchActiveDeliveryOptions(): Promise<DeliveryOptionDto[]> {
+  let response: Response;
+  try {
+    response = await fetch('/api/delivery-options', { credentials: 'include' });
+  } catch {
+    throw new CheckoutApiError('Network error. Please check your connection and try again.');
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new CheckoutApiError(
+      typeof data?.message === 'string' ? data.message : 'Could not load shipping options'
+    );
+  }
+  return data as DeliveryOptionDto[];
+}
+
 export async function fetchOrders(
   accessToken: string | null,
   params: { status?: string; sort?: string } = {}
@@ -132,12 +164,11 @@ export async function fetchOrder(
   email?: string
 ): Promise<OrderDto> {
   const query = email ? `?email=${encodeURIComponent(email)}` : '';
-  const useEmailVerification = !!email;
   let response: Response;
   try {
     response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}${query}`, {
       headers: {
-        ...(accessToken && !useEmailVerification ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       credentials: 'include',
     });
@@ -160,13 +191,12 @@ export async function cancelOrder(
   email?: string
 ): Promise<OrderDto> {
   const query = email ? `?email=${encodeURIComponent(email)}` : '';
-  const useEmailVerification = !!email;
   let response: Response;
   try {
     response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}/cancel${query}`, {
       method: 'POST',
       headers: {
-        ...(accessToken && !useEmailVerification ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       credentials: 'include',
     });

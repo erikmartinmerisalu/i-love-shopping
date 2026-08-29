@@ -24,6 +24,7 @@ import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
+import AdminDeliveryPage from "./pages/admin/AdminDeliveryPage";
 import Layout from "./components/Layout";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -106,6 +107,7 @@ function App() {
                 <Route index element={<AdminDashboardPage />} />
                 <Route path="products" element={<AdminProductsPage />} />
                 <Route path="categories" element={<AdminCategoriesPage />} />
+                <Route path="delivery" element={<AdminDeliveryPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="reviews" element={<AdminReviewsPage />} />

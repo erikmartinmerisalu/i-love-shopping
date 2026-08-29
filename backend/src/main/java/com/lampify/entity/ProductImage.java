@@ -28,6 +28,12 @@ public class ProductImage {
     @Column(nullable = false, length = 500)
     private String urlPath;
 
+    @Column(name = "thumb_path", nullable = false, length = 500)
+    private String thumbPath;
+
+    @Column(name = "medium_path", nullable = false, length = 500)
+    private String mediumPath;
+
     @Column(name = "is_primary", nullable = false)
     private boolean primaryImage = false;
 
@@ -36,4 +42,23 @@ public class ProductImage {
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @PrePersist
+    @PreUpdate
+    public void fillVariantPaths() {
+        if (thumbPath == null || thumbPath.isBlank()) {
+            thumbPath = urlPath;
+        }
+        if (mediumPath == null || mediumPath.isBlank()) {
+            mediumPath = urlPath;
+        }
+    }
+
+    public String effectiveThumbPath() {
+        return (thumbPath == null || thumbPath.isBlank()) ? urlPath : thumbPath;
+    }
+
+    public String effectiveMediumPath() {
+        return (mediumPath == null || mediumPath.isBlank()) ? urlPath : mediumPath;
+    }
 }

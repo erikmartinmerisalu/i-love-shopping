@@ -50,9 +50,13 @@ class CheckoutFlowIntegrationTest {
     private ProductRepository productRepository;
 
     @Autowired
+    private com.lampify.repository.DeliveryOptionRepository deliveryOptionRepository;
+
+    @Autowired
     private TestDatabaseCleaner databaseCleaner;
 
     private Product product;
+    private com.lampify.entity.DeliveryOption deliveryOption;
 
     @BeforeEach
     void seedProduct() {
@@ -73,6 +77,13 @@ class CheckoutFlowIntegrationTest {
         product.setRating(new BigDecimal("4.00"));
         product.setCategory(category);
         product = productRepository.save(product);
+
+        deliveryOption = new com.lampify.entity.DeliveryOption();
+        deliveryOption.setName("Standard shipping");
+        deliveryOption.setPrice(new BigDecimal("4.99"));
+        deliveryOption.setEstimatedDays(5);
+        deliveryOption.setActive(true);
+        deliveryOption = deliveryOptionRepository.save(deliveryOption);
     }
 
     @Test
@@ -138,12 +149,16 @@ class CheckoutFlowIntegrationTest {
                                   "city": "Tallinn",
                                   "postalCode": "10111",
                                   "country": "Estonia",
-                                  "paymentMethod": "CARD"
+                                  "paymentMethod": "CARD",
+                                  "deliveryOptionId": %d
                                 }
-                                """.formatted(email)))
+                                """.formatted(email, deliveryOption.getId())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
                 .andExpect(jsonPath("$.totalAmount").value(80.00))
+                .andExpect(jsonPath("$.shippingAmount").value(4.99))
+                .andExpect(jsonPath("$.deliveryOptionName").value("Standard shipping"))
+                .andExpect(jsonPath("$.estimatedDeliveryAt").exists())
                 .andReturn();
 
         JsonNode orderJson = objectMapper.readTree(orderResult.getResponse().getContentAsString());
@@ -200,9 +215,10 @@ class CheckoutFlowIntegrationTest {
                                   "city": "Tallinn",
                                   "postalCode": "10111",
                                   "country": "Estonia",
-                                  "paymentMethod": "CARD"
+                                  "paymentMethod": "CARD",
+                                  "deliveryOptionId": %d
                                 }
-                                """.formatted(email)))
+                                """.formatted(email, deliveryOption.getId())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
                 .andReturn();
@@ -283,9 +299,10 @@ class CheckoutFlowIntegrationTest {
                                   "city": "Tallinn",
                                   "postalCode": "10111",
                                   "country": "Estonia",
-                                  "paymentMethod": "CARD"
+                                  "paymentMethod": "CARD",
+                                  "deliveryOptionId": %d
                                 }
-                                """.formatted(email)))
+                                """.formatted(email, deliveryOption.getId())))
                 .andExpect(status().isCreated())
                 .andReturn();
 

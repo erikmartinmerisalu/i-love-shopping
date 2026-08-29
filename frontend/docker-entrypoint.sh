@@ -9,8 +9,13 @@ BACKEND_HOST="$(printf '%s' "$BACKEND_URL" | sed -E 's|https?://([^/:]+).*|\1|')
 
 export BACKEND_URL BACKEND_HOST
 
+TEMPLATE="/etc/nginx/templates/default.conf.template"
+if [ "${TLS_ENABLED:-false}" = "true" ]; then
+  TEMPLATE="/etc/nginx/templates/tls.conf.template"
+fi
+
 envsubst '${BACKEND_URL} ${BACKEND_HOST}' \
-  < /etc/nginx/templates/default.conf.template \
+  < "$TEMPLATE" \
   > /etc/nginx/conf.d/default.conf
 
 exec "$@"

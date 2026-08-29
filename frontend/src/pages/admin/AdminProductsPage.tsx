@@ -19,6 +19,11 @@ import CustomDesign from '../../assets/Custom_Design.png';
 const inputClass =
   'w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-white placeholder:text-gray-500';
 
+const previewImageUrls = (detail: { imageUrls?: string[]; thumbnailUrls?: string[] }) =>
+  detail.thumbnailUrls && detail.thumbnailUrls.length > 0
+    ? detail.thumbnailUrls
+    : detail.imageUrls ?? [];
+
 const emptyProduct = (categoryId = 0): AdminProductPayload => ({
   name: '',
   description: '',
@@ -96,7 +101,7 @@ export default function AdminProductsPage() {
     try {
       const detail = await fetchAdminProduct(token, product.id);
       setForm(productToPayload(detail));
-      setImageUrls(detail.imageUrls);
+      setImageUrls(previewImageUrls(detail));
       setEditingId(product.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load product');
@@ -122,11 +127,11 @@ export default function AdminProductsPage() {
         const created = await createAdminProduct(token, payload);
         setMessage(`Created "${created.name}"`);
         setEditingId(created.id);
-        setImageUrls(created.imageUrls);
+        setImageUrls(previewImageUrls(created));
       } else if (typeof editingId === 'number') {
         const updated = await updateAdminProduct(token, editingId, payload);
         setMessage(`Saved "${updated.name}"`);
-        setImageUrls(updated.imageUrls);
+        setImageUrls(previewImageUrls(updated));
       }
       await load();
     } catch (err) {
@@ -161,7 +166,7 @@ export default function AdminProductsPage() {
     try {
       await uploadAdminProductImage(token, editingId, file, imageUrls.length === 0);
       const detail = await fetchAdminProduct(token, editingId);
-      setImageUrls(detail.imageUrls);
+      setImageUrls(previewImageUrls(detail));
       setMessage('Image uploaded');
       await load();
     } catch (err) {
@@ -211,8 +216,13 @@ export default function AdminProductsPage() {
             New product
           </button>
           <label className="cursor-pointer rounded-lg border border-white/20 bg-gray-800 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700">
-            Bulk CSV
-            <input type="file" accept=".csv,text/csv" className="hidden" onChange={handleBulkUpload} />
+            Bulk CSV / JSON
+            <input
+              type="file"
+              accept=".csv,.json,text/csv,application/json"
+              className="hidden"
+              onChange={handleBulkUpload}
+            />
           </label>
         </div>
       </div>
@@ -349,7 +359,7 @@ export default function AdminProductsPage() {
                     <img
                       key={url}
                       src={resolveProductImageUrl(url, CustomDesign)}
-                      alt=""
+                      alt={form.name || 'Product image'}
                       className="h-16 w-16 rounded border border-white/10 object-cover"
                     />
                   ))}

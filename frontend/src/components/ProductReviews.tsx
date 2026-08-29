@@ -8,6 +8,8 @@ import {
 } from '../api/reviews';
 import { useAuth } from '../context/AuthContext';
 import StarRating from './StarRating';
+import StatusBanner from './StatusBanner';
+import Toast from './Toast';
 import type { Review, ReviewEligibleOrder } from '../types/reviews';
 
 type ProductReviewsProps = {
@@ -26,8 +28,15 @@ export default function ProductReviews({ productId, productRating, reviewCount }
   const [selectedOrderId, setSelectedOrderId] = useState<number | ''>('');
   const [formRating, setFormRating] = useState(5);
   const [formBody, setFormBody] = useState('');
-  const [formMessage, setFormMessage] = useState('');
+  const [formError, setFormError] = useState('');
+  const [toast, setToast] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const dismissToast = useCallback(() => setToast(''), []);
+
+  useEffect(() => {
+    setFormError('');
+    setToast('');
+  }, [productId]);
 
   const loadReviews = useCallback(async () => {
     setLoading(true);
@@ -79,7 +88,7 @@ export default function ProductReviews({ productId, productRating, reviewCount }
       return;
     }
     setSubmitting(true);
-    setFormMessage('');
+    setFormError('');
     try {
       await submitReview(token, {
         productId,
@@ -87,12 +96,12 @@ export default function ProductReviews({ productId, productRating, reviewCount }
         rating: formRating,
         body: formBody.trim(),
       });
-      setFormMessage('Review submitted — it will appear after admin approval.');
+      setToast('Your review was submitted');
       setFormBody('');
       setEligibleOrders([]);
       setSelectedOrderId('');
     } catch (err) {
-      setFormMessage(err instanceof Error ? err.message : 'Could not submit review');
+      setFormError(err instanceof Error ? err.message : 'Could not submit review');
     } finally {
       setSubmitting(false);
     }
@@ -112,12 +121,14 @@ export default function ProductReviews({ productId, productRating, reviewCount }
         ),
       );
     } catch (err) {
-      setFormMessage(err instanceof Error ? err.message : 'Could not update vote');
+      setFormError(err instanceof Error ? err.message : 'Could not update vote');
     }
   };
 
   return (
     <section className="mt-16 border-t border-gray-800 pt-10" aria-labelledby="reviews-heading">
+      {toast && <Toast message={toast} onDismiss={dismissToast} />}
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 id="reviews-heading" className="text-xl font-bold">Customer reviews</h2>
@@ -206,13 +217,18 @@ export default function ProductReviews({ productId, productRating, reviewCount }
         </p>
       )}
 
-      {formMessage && <p className="mt-4 text-sm text-sky-200">{formMessage}</p>}
+      {formError && (
+        <div className="mt-6">
+          <StatusBanner variant="error" title="Something went wrong" message={formError} />
+        </div>
+      )}
+
       {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
 
       {loading ? (
         <p className="mt-6 text-sm text-gray-400">Loading reviews…</p>
       ) : reviews.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-400">No approved reviews yet.</p>
+        <p className="mt-6 text-sm text-gray-400">This product has no reviews yet</p>
       ) : (
         <ul className="mt-8 space-y-6">
           {reviews.map((review) => (

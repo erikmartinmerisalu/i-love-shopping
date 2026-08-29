@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/reviews/**").authenticated()
                 .requestMatchers("/home", "/home/**").permitAll()
                 .requestMatchers("/contact", "/contact/**").permitAll()
+                .requestMatchers("/delivery-options", "/delivery-options/**").permitAll()
                 .requestMatchers("/cart", "/cart/**").permitAll()
                 .requestMatchers("/orders", "/orders/**").permitAll()
                 .requestMatchers("/payments", "/payments/**").permitAll()

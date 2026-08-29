@@ -1,10 +1,14 @@
 package com.lampify.service;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -18,9 +22,12 @@ import java.util.UUID;
 public class FileStorageService {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "gif", "svg");
+    private static final Set<String> SKIP_RESIZE_EXTENSIONS = Set.of("svg", "gif");
     private static final String DEFAULT_PRODUCT_IMAGE = "catalog/default-product.png";
     private static final String SEED_IMAGE_DIR = "catalog/seed/";
     private static final String PLACEHOLDER_FILE_NAME = "placeholder.png";
+    static final int THUMB_SIZE = 150;
+    static final int MEDIUM_SIZE = 600;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -48,22 +55,48 @@ public class FileStorageService {
 
     public void ensureSeedImage(Long productId, String fileName) throws IOException {
         String resolvedName = (fileName == null || fileName.isBlank()) ? PLACEHOLDER_FILE_NAME : fileName.trim();
-        Path target = uploadRoot().resolve(Paths.get("products", String.valueOf(productId), resolvedName));
+        Path productDir = uploadRoot().resolve(Paths.get("products", String.valueOf(productId)));
+        Path target = productDir.resolve(resolvedName);
+        Files.createDirectories(productDir);
+
+        ClassPathResource seedResource = new ClassPathResource(SEED_IMAGE_DIR + resolvedName);
+        if (seedResource.exists()) {
+            try (InputStream inputStream = seedResource.getInputStream()) {
+                Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            writeSeedVariants(productDir, resolvedName, target);
+            return;
+        }
+
         if (Files.exists(target)) {
             return;
         }
 
+        target = productPlaceholderPath(productId);
         Files.createDirectories(target.getParent());
-        ClassPathResource seedResource = new ClassPathResource(SEED_IMAGE_DIR + resolvedName);
-        ClassPathResource resource = seedResource.exists()
-                ? seedResource
-                : new ClassPathResource(DEFAULT_PRODUCT_IMAGE);
-        if (!seedResource.exists()) {
-            target = productPlaceholderPath(productId);
-        }
-
-        try (InputStream inputStream = resource.getInputStream()) {
+        try (InputStream inputStream = new ClassPathResource(DEFAULT_PRODUCT_IMAGE).getInputStream()) {
             Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private void writeSeedVariants(Path productDir, String fileName, Path fullPath) {
+        String extension = extractExtension(fileName);
+        if (SKIP_RESIZE_EXTENSIONS.contains(extension)) {
+            return;
+        }
+        try {
+            BufferedImage original = ImageIO.read(fullPath.toFile());
+            if (original == null) {
+                return;
+            }
+            Path mediumDir = productDir.resolve("medium");
+            Path thumbDir = productDir.resolve("thumb");
+            Files.createDirectories(mediumDir);
+            Files.createDirectories(thumbDir);
+            writeVariant(original, mediumDir.resolve(fileName), MEDIUM_SIZE, extension);
+            writeVariant(original, thumbDir.resolve(fileName), THUMB_SIZE, extension);
+        } catch (Exception ignored) {
+            // Listing falls back to the full image when variants are missing.
         }
     }
 
@@ -79,14 +112,49 @@ public class FileStorageService {
         }
 
         String storedName = UUID.randomUUID() + "." + extension;
-        Path productDir = Paths.get(uploadDir, "products", String.valueOf(productId));
+        Path productDir = uploadRoot().resolve(Paths.get("products", String.valueOf(productId)));
         Files.createDirectories(productDir);
 
-        Path target = productDir.resolve(storedName);
-        Files.copy(file.getInputStream(), target);
+        Path fullPath = productDir.resolve(storedName);
+        byte[] bytes = file.getBytes();
+        Files.write(fullPath, bytes);
 
         String urlPath = "/uploads/products/" + productId + "/" + storedName;
-        return new StoredFile(storedName, urlPath);
+        String thumbPath = urlPath;
+        String mediumPath = urlPath;
+
+        if (!SKIP_RESIZE_EXTENSIONS.contains(extension)) {
+            try {
+                BufferedImage original = ImageIO.read(new ByteArrayInputStream(bytes));
+                if (original != null) {
+                    Path mediumDir = productDir.resolve("medium");
+                    Path thumbDir = productDir.resolve("thumb");
+                    Files.createDirectories(mediumDir);
+                    Files.createDirectories(thumbDir);
+                    writeVariant(original, mediumDir.resolve(storedName), MEDIUM_SIZE, extension);
+                    writeVariant(original, thumbDir.resolve(storedName), THUMB_SIZE, extension);
+                    mediumPath = "/uploads/products/" + productId + "/medium/" + storedName;
+                    thumbPath = "/uploads/products/" + productId + "/thumb/" + storedName;
+                }
+            } catch (Exception ignored) {
+                thumbPath = urlPath;
+                mediumPath = urlPath;
+            }
+        }
+
+        return new StoredFile(storedName, urlPath, thumbPath, mediumPath);
+    }
+
+    private void writeVariant(BufferedImage source, Path target, int maxSize, String extension) throws IOException {
+        String format = "jpg".equals(extension) || "jpeg".equals(extension) ? "jpg" : extension;
+        if (!Set.of("jpg", "png", "webp").contains(format)) {
+            format = "png";
+        }
+        Thumbnails.of(source)
+                .size(maxSize, maxSize)
+                .keepAspectRatio(true)
+                .outputFormat(format)
+                .toFile(target.toFile());
     }
 
     private String extractExtension(String filename) {
@@ -97,5 +165,5 @@ public class FileStorageService {
         return filename.substring(dot + 1).toLowerCase();
     }
 
-    public record StoredFile(String fileName, String urlPath) {}
+    public record StoredFile(String fileName, String urlPath, String thumbPath, String mediumPath) {}
 }

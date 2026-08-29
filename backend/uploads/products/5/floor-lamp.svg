@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
-  <rect width="640" height="640" fill="#052e16"/>
-  <ellipse cx="320" cy="520" rx="90" ry="24" fill="#14532d"/>
-  <rect x="300" y="180" width="40" height="340" rx="10" fill="#166534"/>
-  <path d="M160 200 Q320 80 480 200 L420 240 Q320 160 220 240 Z" fill="#4ade80"/>
-  <circle cx="420" cy="220" r="55" fill="#86efac"/>
-  <text x="320" y="580" text-anchor="middle" fill="#dcfce7" font-family="sans-serif" font-size="28">Floor Lamp</text>
-</svg>

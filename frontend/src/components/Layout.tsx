@@ -7,7 +7,11 @@ import QuickSearch from './QuickSearch';
 import { SITE } from '../config/site';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `text-sm font-medium transition ${isActive ? 'text-sky-300' : 'text-gray-300 hover:text-white'}`;
+  `inline-flex w-full items-center justify-center rounded-lg border px-3.5 py-2 text-sm font-semibold transition lg:w-auto ${
+    isActive
+      ? 'border-sky-400/70 bg-sky-500/20 text-sky-100 shadow-sm shadow-sky-500/10'
+      : 'border-white/20 bg-gray-800 text-gray-200 hover:border-white/40 hover:bg-gray-700 hover:text-white'
+  }`;
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -40,11 +44,16 @@ export default function Layout() {
       <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
         <div className="page-container">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3 py-3 lg:flex-nowrap lg:py-4">
-            <Link to="/" className="shrink-0 text-xl font-bold text-primary sm:text-2xl">
-              {SITE.name}
+            <Link
+              to="/"
+              className="inline-flex shrink-0 items-center rounded-xl border border-sky-400/50 bg-gradient-to-r from-sky-500/30 to-emerald-500/25 px-4 py-2 shadow-[0_0_18px_rgba(14,165,233,0.16)]"
+            >
+              <span className="bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-xl font-bold tracking-tight text-transparent sm:text-2xl">
+                {SITE.name}
+              </span>
             </Link>
 
-            <nav className="hidden items-center gap-5 lg:flex" aria-label="Main navigation">
+            <nav className="hidden items-center gap-1.5 lg:flex" aria-label="Main navigation">
               <NavLink to="/" end className={navLinkClass}>
                 Home
               </NavLink>
@@ -115,7 +124,7 @@ export default function Layout() {
 
         {mobileNavOpen && (
           <nav className="page-container border-t border-gray-800 py-3 lg:hidden" aria-label="Mobile navigation">
-            <ul className="flex flex-col gap-2">
+            <ul className="grid grid-cols-2 gap-2">
               <li><NavLink to="/" end className={navLinkClass} onClick={() => setMobileNavOpen(false)}>Home</NavLink></li>
               <li><NavLink to="/products" className={navLinkClass} onClick={() => setMobileNavOpen(false)}>Shop</NavLink></li>
               <li><NavLink to="/about" className={navLinkClass} onClick={() => setMobileNavOpen(false)}>About</NavLink></li>
@@ -157,10 +166,37 @@ export default function Layout() {
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">Connect</h3>
                 <p className="mt-3 text-xs text-gray-500">Demo placeholders — not real profiles.</p>
-                <ul className="mt-2 space-y-2 text-sm text-gray-500">
-                  <li>Instagram (mock)</li>
-                  <li>Facebook (mock)</li>
-                  <li>LinkedIn (mock)</li>
+                <ul className="mt-2 space-y-2 text-sm">
+                  <li>
+                    <a
+                      href={SITE.social.instagram}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className="text-gray-400 hover:text-white"
+                    >
+                      Instagram
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={SITE.social.facebook}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className="text-gray-400 hover:text-white"
+                    >
+                      Facebook
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={SITE.social.linkedin}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className="text-gray-400 hover:text-white"
+                    >
+                      LinkedIn
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>

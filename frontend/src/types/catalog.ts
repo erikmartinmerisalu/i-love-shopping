@@ -38,6 +38,7 @@ export type ProductDetail = {
   reviewCount: number;
   category: Category;
   imageUrls: string[];
+  thumbnailUrls?: string[];
   sku?: string | null;
   active?: boolean;
   featured?: boolean;

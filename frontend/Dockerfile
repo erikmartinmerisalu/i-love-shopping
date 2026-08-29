@@ -18,11 +18,12 @@ FROM nginx:alpine
 RUN apk add --no-cache gettext
 
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx-tls.conf.template /etc/nginx/templates/tls.conf.template
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 80 443
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

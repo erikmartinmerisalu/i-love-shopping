@@ -23,6 +23,17 @@ docker compose up --build
 | API | http://localhost:8080/api |
 | RabbitMQ UI | http://localhost:15672 (`guest` / `guest`) |
 
+### HTTPS (self-signed TLS)
+
+Host still only needs Docker. Generate a local certificate, then start the TLS overlay (shop on **https://localhost:3000**):
+
+```bash
+./testing/scripts/generate-tls.sh
+docker compose -f docker-compose.yml -f docker-compose.tls.yml up --build
+```
+
+The browser will warn about the self-signed cert — proceed once for `localhost`. Refresh cookies are marked `Secure` in this profile. HTTP `docker compose up` remains the default for local HTTP demos.
+
 Stop: `docker compose down` · Reset data: `docker compose down -v`
 
 **Local dev:** run Postgres (or full compose stack), then `cd backend && mvn spring-boot:run` and `cd frontend && npm install && npm run dev` (http://localhost:5173). See [example.env](example.env) for variables.
@@ -43,9 +54,9 @@ Stop: `docker compose down` · Reset data: `docker compose down -v`
 
 Single route `/checkout`:
 
-1. Contact, shipping address, payment method (STRIPE / CARD / PAYPAL sandbox).
-2. Place order → pay on the same page (no redirect on failure; errors shown inline).
-3. Success → confirmation view; **confirmation email sent after payment succeeds**.
+1. Contact, **shipping method** (active delivery options), shipping address, payment method (STRIPE / CARD / PAYPAL sandbox).
+2. Merchandise total stays excl. shipping; shipping is a separate line. Place order → pay on the same page (no redirect on failure; errors shown inline).
+3. Success → confirmation view with **estimated delivery** from the chosen option; **confirmation email sent after payment succeeds**.
 
 Logged-in users get **email and name prefilled**. Address and payment fields are validated on the client and server.
 
@@ -61,7 +72,25 @@ Logged-in users get **email and name prefilled**. Address and payment fields are
 
 ### Auth (summary)
 
-Register / login, Google OAuth, forgot password, optional 2FA under Profile. JWT access token in memory; refresh token in httpOnly cookie.
+Register / login, Google OAuth, forgot password, optional 2FA under Profile. JWT access token in memory; refresh token in httpOnly cookie. **Admin accounts must enable TOTP 2FA** before `/admin` works.
+
+### Admin
+
+Seed user (Compose / `example.env`): `admin@estvalgus.local` / `Admin123!`. First login redirects to **Profile → Security** until 2FA is on.
+
+| Route | What |
+|-------|------|
+| `/admin` | Dashboard counts |
+| `/admin/products` | CRUD, image upload (thumb/medium/full), bulk **CSV or JSON** |
+| `/admin/categories` | Taxonomy CRUD |
+| `/admin/delivery` | Delivery-option CRUD (delete deactivates if used on an order) |
+| `/admin/orders` | Status, assign shipping, refunds |
+| `/admin/users` | Role + enabled |
+| `/admin/reviews` | Approve / reject pending reviews |
+
+### Reviews
+
+Purchase-verified only (`PAID` / `SHIPPED` / `FULFILLED` order containing the product). Submit stays **PENDING** until an admin approves; then it appears on the product with rating average. Signed-in users can **Mark helpful**; default sort is most helpful.
 
 ---
 
@@ -83,8 +112,40 @@ cd backend && mvn test
 | `AuthSecurityTest` | Security | Injection / weak password on register |
 | `ProductCatalogSecurityTest` | Security | Search injection |
 | `OAuthEndpointSecurityTest` | Security | OAuth endpoints |
-| `RateLimitingFilterTest` | Unit | Auth rate limits |
+| `RateLimitingFilterTest` | Unit | Token-bucket auth burst / 429 |
+| `TokenBucketRateLimitTest` | Unit | Refill + shared auth bucket |
+| `EncryptionAtRestTest` | Security | Order PII, 2FA secret, hashed refresh tokens |
+| `ReviewIntegrationTest` | Integration | Submit → pending hidden → admin approve → visible; helpful-vote sort |
+| `BulkUploadIntegrationTest` | Integration | CSV + JSON bulk; featured flag; invalid rows skipped |
+| `AdminDeliveryOptionsTest` | Integration | Delivery CRUD + 403 without admin/2FA |
+| `AdminSecurityTest` | Security | Admin RBAC + 2FA gate |
+| `FileStorageServiceTest` | Unit | Thumb / medium / full image variants |
 | `AuthControllerTest` | API | Controller validation |
+
+Load tests (k6, against a running stack): [testing/k6](testing/k6) · [testing/README.md](testing/README.md) · report [testing/reports/load-test-2026-08-26.md](testing/reports/load-test-2026-08-26.md).
+
+```bash
+./testing/scripts/run-load-tests.sh smoke   # API must be up
+./testing/scripts/run-load-tests.sh full
+```
+
+---
+
+## Performance
+
+**SLA used in scripts:** p95 latency ≤ 5 seconds.
+
+| Scenario | Script | What it does |
+|----------|--------|----------------|
+| S1 Browse | `testing/k6/browse.js` | Weighted GET `/home`, `/products`, `/products/{id}`, `/products/suggest` |
+| S2 Checkout | `testing/k6/checkout.js` | Guest cart → `POST /orders` (with shipping) → sandbox pay |
+
+Measured p95 / VU numbers go in [testing/reports/load-test-2026-08-26.md](testing/reports/load-test-2026-08-26.md) after a k6 run. That file also lists bottlenecks already addressed:
+
+- Hikari pool **25** (was 10)
+- Hibernate SQL logging **off** for Compose (was DEBUG/TRACE)
+- **V21** `pg_trgm` indexes for `LOWER(name|brand) LIKE` search
+- Listing/cart use **thumbnail** image variants
 
 ---
 
@@ -105,7 +166,7 @@ Order PII and payment failure messages are **encrypted at rest** (AES-GCM, `APP_
 
 ## Entity-relationship diagram
 
-Flyway migrations **V1–V13**. Guest carts use `guest_token`; logged-in carts use `user_id` (mutually exclusive). Order contact fields and payment failure messages are encrypted at rest (V13).
+Flyway migrations **V1–V21**. Guest carts use `guest_token`; logged-in carts use `user_id` (mutually exclusive). Order contact fields, order item names, and 2FA secrets are encrypted at rest; refresh tokens are stored as SHA-256 hashes.
 
 ### Commerce
 
@@ -119,12 +180,21 @@ erDiagram
     PRODUCTS ||--o{ ORDER_ITEMS : in
     ORDERS ||--|{ ORDER_STATUS_HISTORY : tracks
     ORDERS ||--|{ PAYMENT_TRANSACTIONS : paid_by
+    ORDERS ||--o{ REFUNDS : refunded_by
+    DELIVERY_OPTIONS ||--o{ ORDERS : ships
     CATEGORIES ||--|{ PRODUCTS : contains
     PRODUCTS ||--|{ PRODUCT_IMAGES : has
+    PRODUCTS ||--o{ REVIEWS : reviewed_in
+    USERS ||--o{ REVIEWS : writes
+    ORDERS ||--o{ REVIEWS : verifies
+    REVIEWS ||--o{ REVIEW_HELPFUL_VOTES : voted_on
+    USERS ||--o{ REVIEW_HELPFUL_VOTES : casts
 
     USERS {
         bigint id PK
         varchar email UK
+        varchar role
+        boolean two_factor_enabled
     }
     CARTS {
         bigint id PK
@@ -148,17 +218,30 @@ erDiagram
         varchar name
         decimal price
         int stock_quantity
+        boolean featured
+        boolean active
+        int review_count
     }
     PRODUCT_IMAGES {
         bigint id PK
         bigint product_id FK
         varchar url_path
+        varchar thumb_path
+        varchar medium_path
         boolean is_primary
+    }
+    DELIVERY_OPTIONS {
+        bigint id PK
+        varchar name
+        decimal price
+        int estimated_days
+        boolean active
     }
     ORDERS {
         bigint id PK
         varchar order_number UK
         bigint user_id FK
+        bigint delivery_option_id FK
         varchar status
         varchar payment_method
         decimal total_amount
@@ -184,6 +267,25 @@ erDiagram
         varchar status
         decimal amount
     }
+    REFUNDS {
+        bigint id PK
+        bigint order_id FK
+        decimal amount
+        varchar status
+    }
+    REVIEWS {
+        bigint id PK
+        bigint product_id FK
+        bigint user_id FK
+        bigint order_id FK
+        int rating
+        varchar status
+    }
+    REVIEW_HELPFUL_VOTES {
+        bigint id PK
+        bigint review_id FK
+        bigint user_id FK
+    }
 ```
 
 ### Auth (supporting tables)
@@ -197,6 +299,7 @@ erDiagram
     USERS {
         bigint id PK
         varchar email UK
+        varchar role
         varchar password
         boolean two_factor_enabled
     }
@@ -232,17 +335,21 @@ erDiagram
 | User | Cart | 0..1; guest carts via `guest_token` |
 | Cart | Cart items | 1:N; cleared after checkout |
 | User | Orders | 1:N; guest checkout may leave `user_id` null |
-| Order | Items / history / payments | 1:N |
+| Order | Delivery option | N:1; ETA stored on the order |
+| Order | Items / history / payments / refunds | 1:N |
+| Product | Reviews | 1:N; purchase-verified, admin-moderated |
 | Product | Cart items / order items | Stock locked at checkout |
+| Product image | Variants | `url_path` full, `medium_path` 600px, `thumb_path` 150px |
 
 ---
 
 ## Additional features
 
 - Product search, category/brand/price filters, sort
-- Google OAuth, reCAPTCHA v3 (optional), TOTP 2FA
+- Google OAuth, reCAPTCHA v3 (optional), TOTP 2FA (**required for admin**)
 - JWT refresh rotation and access-token revocation
 - Password reset email flow
 - Dockerized full stack (frontend, backend, Postgres, RabbitMQ)
+- Optional HTTPS overlay (`docker-compose.tls.yml`)
 
 Configuration template: [example.env](example.env)

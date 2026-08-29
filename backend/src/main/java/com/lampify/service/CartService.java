@@ -340,10 +340,10 @@ public class CartService {
     private String resolvePrimaryImage(Product product) {
         return product.getImages().stream()
                 .filter(ProductImage::isPrimaryImage)
-                .map(ProductImage::getUrlPath)
+                .map(ProductImage::effectiveThumbPath)
                 .findFirst()
                 .orElseGet(() -> product.getImages().stream()
-                        .map(ProductImage::getUrlPath)
+                        .map(ProductImage::effectiveThumbPath)
                         .findFirst()
                         .orElse(null));
     }

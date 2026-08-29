@@ -97,13 +97,14 @@ public class ReviewService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You have already reviewed this product");
         }
 
+        Order order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        attachGuestOrderToUser(order, user);
+
         if (!orderRepository.userPurchasedProduct(
                 user.getId(), product.getId(), request.getOrderId(), ELIGIBLE_ORDER_STATUSES)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You must purchase this product before reviewing");
         }
-
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         Review review = new Review();
         review.setProduct(product);
@@ -144,7 +145,7 @@ public class ReviewService {
     public List<ReviewDto> listReviewsForModeration(String status) {
         adminAuthorizationService.requireAdminWithTwoFactor();
         ReviewStatus reviewStatus = parseStatus(status, ReviewStatus.PENDING);
-        List<Review> reviews = reviewRepository.findByStatusOrderByCreatedAtAsc(reviewStatus);
+        List<Review> reviews = reviewRepository.findByStatusWithUserAndProductOrderByCreatedAtAsc(reviewStatus);
         Map<Long, Long> helpfulCounts = loadHelpfulCounts(reviews);
         return reviews.stream()
                 .map(review -> toReviewDto(review, helpfulCounts, null, true))
@@ -209,9 +210,13 @@ public class ReviewService {
         ReviewDto dto = new ReviewDto();
         dto.setId(review.getId());
         dto.setProductId(review.getProduct().getId());
+        dto.setProductName(review.getProduct().getName());
         dto.setRating(review.getRating());
         dto.setBody(review.getBody());
-        dto.setAuthorName(maskAuthorName(review.getUser()));
+        dto.setAuthorName(includeStatus ? adminAuthorLabel(review.getUser()) : maskAuthorName(review.getUser()));
+        if (includeStatus) {
+            dto.setAuthorUsername(review.getUser().getUsername());
+        }
         dto.setCreatedAt(review.getCreatedAt());
         dto.setHelpfulCount(helpfulCounts.getOrDefault(review.getId(), 0L));
         if (currentUserId != null) {
@@ -224,6 +229,13 @@ public class ReviewService {
         return dto;
     }
 
+    private String adminAuthorLabel(User user) {
+        if (user.getUsername() != null && !user.getUsername().isBlank()) {
+            return user.getUsername();
+        }
+        return user.getEmail();
+    }
+
     private String maskAuthorName(User user) {
         String email = user.getEmail();
         int at = email.indexOf('@');
@@ -231,6 +243,17 @@ public class ReviewService {
             return "Verified buyer";
         }
         return email.charAt(0) + "***" + email.substring(at);
+    }
+
+    private void attachGuestOrderToUser(Order order, User user) {
+        if (order.getUser() != null || user.getEmail() == null) {
+            return;
+        }
+        String orderEmail = order.getEmail();
+        if (orderEmail != null && orderEmail.trim().equalsIgnoreCase(user.getEmail().trim())) {
+            order.setUser(user);
+            orderRepository.save(order);
+        }
     }
 
     private User requireAuthenticatedUser() {

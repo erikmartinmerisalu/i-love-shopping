@@ -133,7 +133,11 @@ const OrdersPage = () => {
               <li key={order.orderNumber}>
                 <button
                   type="button"
-                  onClick={() => navigate(`/orders/${order.orderNumber}`)}
+                  onClick={() =>
+                    navigate(
+                      `/orders/${order.orderNumber}${order.items.some((item) => item.canReview) ? '#reviews' : ''}`,
+                    )
+                  }
                   className="w-full rounded-xl border border-gray-800 bg-gray-900 p-4 text-left hover:border-sky-500/50 transition"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -148,6 +152,18 @@ const OrdersPage = () => {
                       €{Number(order.totalAmount).toFixed(2)}
                     </span>
                   </div>
+                  {order.items.some((item) => item.canReview) && (
+                    <p className="mt-2 text-xs font-medium text-sky-300">Not reviewed yet — leave a review →</p>
+                  )}
+                  {!order.items.some((item) => item.canReview) &&
+                    order.items.some((item) => item.reviewStatus === 'PENDING') && (
+                      <p className="mt-2 text-xs font-medium text-amber-200">Review submitted — waiting for approval</p>
+                    )}
+                  {!order.items.some((item) => item.canReview) &&
+                    order.items.some((item) => item.reviewStatus === 'APPROVED') &&
+                    !order.items.some((item) => item.reviewStatus === 'PENDING') && (
+                      <p className="mt-2 text-xs font-medium text-emerald-300">Reviewed</p>
+                    )}
                 </button>
               </li>
             ))}

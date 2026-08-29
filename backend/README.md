@@ -10,7 +10,7 @@ Spring Boot backend service for ESTValgus user authentication and registration.
 ## Build
 
 ```bash
-cd lampify-backend
+cd backend
 mvn clean package
 ```
 

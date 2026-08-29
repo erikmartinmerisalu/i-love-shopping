@@ -15,4 +15,6 @@ public class OrderItemDto {
     private BigDecimal unitPrice;
     private int quantity;
     private BigDecimal lineTotal;
+    private boolean canReview;
+    private String reviewStatus;
 }

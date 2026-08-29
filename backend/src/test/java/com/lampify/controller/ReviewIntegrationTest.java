@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,6 +35,7 @@ class ReviewIntegrationTest {
     @Autowired private ProductRepository productRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private OrderRepository orderRepository;
+    @Autowired private ReviewRepository reviewRepository;
     @Autowired private JwtUtil jwtUtil;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -70,30 +72,7 @@ class ReviewIntegrationTest {
         admin = createAdmin("review-admin@test.local", true);
         customerToken = jwtUtil.generateToken(customer.getEmail(), UserRole.CUSTOMER.name());
         adminToken = jwtUtil.generateToken(admin.getEmail(), UserRole.ADMIN.name());
-
-        order = new Order();
-        order.setOrderNumber("REV-ORD-001");
-        order.setUser(customer);
-        order.setStatus(OrderStatus.PAID);
-        order.setPaymentMethod(PaymentMethod.CARD);
-        order.setFullName("Test Buyer");
-        order.setEmail(customer.getEmail());
-        order.setPhone("+3725555555");
-        order.setAddressLine1("Test St 1");
-        order.setCity("Tallinn");
-        order.setPostalCode("10111");
-        order.setCountry("EE");
-        order.setTotalAmount(new BigDecimal("55.00"));
-
-        OrderItem item = new OrderItem();
-        item.setOrder(order);
-        item.setProduct(product);
-        item.setProductName(product.getName());
-        item.setUnitPrice(product.getPrice());
-        item.setQuantity(1);
-        item.setLineTotal(product.getPrice());
-        order.getItems().add(item);
-        order = orderRepository.save(order);
+        order = paidOrder(customer, "REV-ORD-001");
     }
 
     @Test
@@ -120,6 +99,8 @@ class ReviewIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].rating").value(5))
+                .andExpect(jsonPath("$[0].productName").value("Review Lamp"))
+                .andExpect(jsonPath("$[0].authorUsername").value("reviewer"))
                 .andReturn();
 
         long reviewId = objectMapper.readTree(listPending.getResponse().getContentAsString()).get(0).get("id").asLong();
@@ -138,6 +119,158 @@ class ReviewIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reviewCount").value(1))
                 .andExpect(jsonPath("$.rating").value(5.0));
+    }
+
+    @Test
+    void helpfulVoteMovesReviewAboveNewerUnvotedReview() throws Exception {
+        User secondBuyer = createUser("reviewer-two@example.com", UserRole.CUSTOMER);
+        String secondToken = jwtUtil.generateToken(secondBuyer.getEmail(), UserRole.CUSTOMER.name());
+        Order secondOrder = paidOrder(secondBuyer, "REV-ORD-002");
+
+        long olderId = submitAndApprove(
+                customerToken,
+                order.getId(),
+                4,
+                "Older review that will receive a helpful vote.");
+        long newerId = submitAndApprove(
+                secondToken,
+                secondOrder.getId(),
+                5,
+                "Newer review with no helpful votes yet at all.");
+
+        Review older = reviewRepository.findById(olderId).orElseThrow();
+        older.setCreatedAt(LocalDateTime.now().minusHours(2));
+        reviewRepository.save(older);
+
+        mockMvc.perform(post("/reviews/" + olderId + "/helpful")
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.helpfulCount").value(1))
+                .andExpect(jsonPath("$.helpfulByCurrentUser").value(true));
+
+        mockMvc.perform(get("/products/" + product.getId() + "/reviews").param("sort", "helpful"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.reviews[0].id").value(olderId))
+                .andExpect(jsonPath("$.reviews[0].helpfulCount").value(1))
+                .andExpect(jsonPath("$.reviews[1].id").value(newerId))
+                .andExpect(jsonPath("$.reviews[1].helpfulCount").value(0));
+
+        mockMvc.perform(get("/products/" + product.getId() + "/reviews").param("sort", "recent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reviews[0].id").value(newerId))
+                .andExpect(jsonPath("$.reviews[1].id").value(olderId));
+
+        mockMvc.perform(get("/products/" + product.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reviewCount").value(2));
+    }
+
+    @Test
+    void paidOrderShowsReviewableUntilSubmittedThenShowsPendingStatus() throws Exception {
+        mockMvc.perform(get("/orders/" + order.getOrderNumber())
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PAID"))
+                .andExpect(jsonPath("$.items[0].canReview").value(true));
+
+        mockMvc.perform(post("/reviews")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "orderId": %d,
+                                  "rating": 4,
+                                  "body": "Bright lamp, solid build, would buy again."
+                                }
+                                """.formatted(product.getId(), order.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+
+        mockMvc.perform(get("/orders/" + order.getOrderNumber())
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].canReview").value(false))
+                .andExpect(jsonPath("$.items[0].reviewStatus").value("PENDING"));
+    }
+
+    @Test
+    void guestPaidOrderBecomesReviewableWhenBuyerSignsIn() throws Exception {
+        Order guestOrder = paidOrder(null, "REV-GUEST-001");
+        guestOrder.setEmail(customer.getEmail());
+        guestOrder = orderRepository.save(guestOrder);
+
+        mockMvc.perform(get("/orders/" + guestOrder.getOrderNumber())
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].canReview").value(true));
+
+        mockMvc.perform(post("/reviews")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "orderId": %d,
+                                  "rating": 5,
+                                  "body": "Guest checkout lamp is now reviewable after login."
+                                }
+                                """.formatted(product.getId(), guestOrder.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    private long submitAndApprove(String token, long orderId, int rating, String body) throws Exception {
+        var submitted = mockMvc.perform(post("/reviews")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "orderId": %d,
+                                  "rating": %d,
+                                  "body": "%s"
+                                }
+                                """.formatted(product.getId(), orderId, rating, body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andReturn();
+
+        long reviewId = objectMapper.readTree(submitted.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/admin/reviews/" + reviewId + "/approve")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+
+        return reviewId;
+    }
+
+    private Order paidOrder(User buyer, String orderNumber) {
+        Order paid = new Order();
+        paid.setOrderNumber(orderNumber);
+        paid.setUser(buyer);
+        paid.setStatus(OrderStatus.PAID);
+        paid.setPaymentMethod(PaymentMethod.CARD);
+        paid.setFullName("Test Buyer");
+        paid.setEmail(buyer != null ? buyer.getEmail() : "guest-buyer@example.com");
+        paid.setPhone("+3725555555");
+        paid.setAddressLine1("Test St 1");
+        paid.setCity("Tallinn");
+        paid.setPostalCode("10111");
+        paid.setCountry("EE");
+        paid.setTotalAmount(new BigDecimal("55.00"));
+
+        OrderItem item = new OrderItem();
+        item.setOrder(paid);
+        item.setProduct(product);
+        item.setProductName(product.getName());
+        item.setUnitPrice(product.getPrice());
+        item.setQuantity(1);
+        item.setLineTotal(product.getPrice());
+        paid.getItems().add(item);
+        return orderRepository.save(paid);
     }
 
     private User createUser(String email, UserRole role) {

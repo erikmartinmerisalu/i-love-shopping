@@ -150,6 +150,7 @@ public class AdminOrderService {
         dto.setCountry(order.getCountry());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setCreatedAt(order.getCreatedAt().format(ISO));
+        applyShipping(dto, order);
         dto.setItems(order.getItems().stream().map(this::toItemDto).toList());
         return dto;
     }
@@ -181,5 +182,17 @@ public class AdminOrderService {
                 option.getPrice(),
                 option.getEstimatedDays(),
                 option.isActive());
+    }
+
+    private void applyShipping(OrderDto dto, Order order) {
+        if (order.getDeliveryOption() == null) {
+            return;
+        }
+        dto.setDeliveryOptionId(order.getDeliveryOption().getId());
+        dto.setDeliveryOptionName(order.getDeliveryOption().getName());
+        dto.setShippingAmount(order.getDeliveryOption().getPrice());
+        if (order.getEstimatedDeliveryAt() != null) {
+            dto.setEstimatedDeliveryAt(order.getEstimatedDeliveryAt().format(ISO));
+        }
     }
 }

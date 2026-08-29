@@ -21,6 +21,7 @@ public class ProductDetailDto {
     private int reviewCount;
     private CategoryDto category;
     private List<String> imageUrls;
+    private List<String> thumbnailUrls;
     private String sku;
     private boolean active = true;
     private boolean featured;

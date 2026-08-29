@@ -1,5 +1,6 @@
 import type {
   AdminCategoryPayload,
+  AdminDeliveryOptionPayload,
   AdminProductPayload,
   AdminRefundPayload,
 } from '../types/admin';
@@ -127,6 +128,25 @@ export const createAdminRefund = (token: string | null, orderId: number, payload
 
 export const fetchDeliveryOptions = (token: string | null) =>
   adminFetch<DeliveryOption[]>('/admin/delivery-options', token);
+
+export const createDeliveryOption = (token: string | null, payload: AdminDeliveryOptionPayload) =>
+  adminFetch<DeliveryOption>('/admin/delivery-options', token, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const updateDeliveryOption = (
+  token: string | null,
+  id: number,
+  payload: AdminDeliveryOptionPayload,
+) =>
+  adminFetch<DeliveryOption>(`/admin/delivery-options/${id}`, token, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+
+export const deleteDeliveryOption = (token: string | null, id: number) =>
+  adminFetch<void>(`/admin/delivery-options/${id}`, token, { method: 'DELETE' });
 
 export const fetchAdminProducts = (token: string | null, page = 0, size = 20) =>
   adminFetch<ProductListResponse>(`/admin/products?page=${page}&size=${size}`, token);

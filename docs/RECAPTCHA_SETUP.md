@@ -4,7 +4,7 @@ ESTValgus uses **Google reCAPTCHA v2 (“I'm not a robot” checkbox)** on the r
 
 ---
 
-## Part 1 — Create keys in Google (one-time)
+## 1 — Create keys in Google (one-time)
 
 1. Open https://www.google.com/recaptcha/admin/create  
 2. Fill in:
@@ -27,7 +27,7 @@ You can add multiple domains on one reCAPTCHA site. Add Render only after you kn
 
 ---
 
-## Part 2 — Localhost setup
+## 2 — Localhost setup
 
 ### A) Docker (`http://localhost:3000`)
 
@@ -85,7 +85,7 @@ cd frontend && npm run dev
 
 ---
 
-## Part 3 — Render setup (for testers)
+## 3 — Render setup
 
 Render runs two services: **backend API** and **frontend**. CAPTCHA needs keys on **both**, plus your Render hostname in Google.
 

@@ -1,9 +1,11 @@
 export type Review = {
   id: number;
   productId: number;
+  productName?: string | null;
   rating: number;
   body: string;
   authorName: string;
+  authorUsername?: string | null;
   createdAt: string;
   helpfulCount: number;
   helpfulByCurrentUser: boolean;

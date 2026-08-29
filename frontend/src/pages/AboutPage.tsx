@@ -61,13 +61,34 @@ export default function AboutPage() {
           <p className="mt-1 text-sm text-gray-500">{SITE.contact.email}</p>
           <ul className="mt-4 flex flex-wrap gap-4 text-sm">
             <li>
-              <span className="text-gray-500">Instagram (placeholder)</span>
+              <a
+                href={SITE.social.instagram}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="text-sky-300 hover:text-sky-200 underline underline-offset-2"
+              >
+                Instagram
+              </a>
             </li>
             <li>
-              <span className="text-gray-500">Facebook (placeholder)</span>
+              <a
+                href={SITE.social.facebook}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="text-sky-300 hover:text-sky-200 underline underline-offset-2"
+              >
+                Facebook
+              </a>
             </li>
             <li>
-              <span className="text-gray-500">LinkedIn (placeholder)</span>
+              <a
+                href={SITE.social.linkedin}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="text-sky-300 hover:text-sky-200 underline underline-offset-2"
+              >
+                LinkedIn
+              </a>
             </li>
           </ul>
           <Link

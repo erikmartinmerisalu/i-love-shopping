@@ -25,6 +25,10 @@ public class OrderDto {
     private String postalCode;
     private String country;
     private BigDecimal totalAmount;
+    private BigDecimal shippingAmount;
+    private Long deliveryOptionId;
+    private String deliveryOptionName;
+    private String estimatedDeliveryAt;
     private String createdAt;
     private List<OrderItemDto> items = new ArrayList<>();
     private List<OrderStatusHistoryDto> statusHistory = new ArrayList<>();
