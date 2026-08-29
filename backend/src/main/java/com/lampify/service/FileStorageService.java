@@ -2,7 +2,10 @@ package com.lampify.service;
 
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,7 +49,37 @@ public class FileStorageService {
         }
 
         String relative = urlPath.startsWith("/uploads/") ? urlPath.substring("/uploads/".length()) : urlPath;
-        return Files.isRegularFile(uploadRoot().resolve(relative));
+        Path onDisk = uploadRoot().resolve(relative).normalize();
+        if (onDisk.startsWith(uploadRoot()) && Files.isRegularFile(onDisk)) {
+            return true;
+        }
+        return classpathSeedExists(fileNameOf(relative));
+    }
+
+    /**
+     * Disk file first, then the matching file in {@code catalog/seed/} (used on Render
+     * when the ephemeral upload directory is empty).
+     */
+    public Resource loadPublicUpload(String relativePath) throws IOException {
+        if (relativePath == null || relativePath.isBlank() || relativePath.contains("..")) {
+            return null;
+        }
+        String relative = relativePath.replace('\\', '/');
+        if (relative.startsWith("/")) {
+            relative = relative.substring(1);
+        }
+
+        Path onDisk = uploadRoot().resolve(relative).normalize();
+        if (onDisk.startsWith(uploadRoot()) && Files.isRegularFile(onDisk)) {
+            return new FileSystemResource(onDisk);
+        }
+
+        try (InputStream inputStream = openClasspathSeed(fileNameOf(relative))) {
+            if (inputStream == null) {
+                return null;
+            }
+            return new ByteArrayResource(inputStream.readAllBytes());
+        }
     }
 
     public void ensureProductPlaceholder(Long productId) throws IOException {
@@ -59,13 +92,12 @@ public class FileStorageService {
         Path target = productDir.resolve(resolvedName);
         Files.createDirectories(productDir);
 
-        ClassPathResource seedResource = new ClassPathResource(SEED_IMAGE_DIR + resolvedName);
-        if (seedResource.exists()) {
-            try (InputStream inputStream = seedResource.getInputStream()) {
+        try (InputStream inputStream = openClasspathSeed(resolvedName)) {
+            if (inputStream != null) {
                 Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+                writeSeedVariants(productDir, resolvedName, target);
+                return;
             }
-            writeSeedVariants(productDir, resolvedName, target);
-            return;
         }
 
         if (Files.exists(target)) {
@@ -155,6 +187,27 @@ public class FileStorageService {
                 .keepAspectRatio(true)
                 .outputFormat(format)
                 .toFile(target.toFile());
+    }
+
+    private static String fileNameOf(String relativePath) {
+        String normalized = relativePath.replace('\\', '/');
+        int slash = normalized.lastIndexOf('/');
+        return slash >= 0 ? normalized.substring(slash + 1) : normalized;
+    }
+
+    private static InputStream openClasspathSeed(String fileName) {
+        if (fileName == null || !fileName.matches("[A-Za-z0-9._-]+")) {
+            return null;
+        }
+        return FileStorageService.class.getClassLoader().getResourceAsStream(SEED_IMAGE_DIR + fileName);
+    }
+
+    private static boolean classpathSeedExists(String fileName) {
+        try (InputStream inputStream = openClasspathSeed(fileName)) {
+            return inputStream != null;
+        } catch (IOException ex) {
+            return false;
+        }
     }
 
     private String extractExtension(String filename) {

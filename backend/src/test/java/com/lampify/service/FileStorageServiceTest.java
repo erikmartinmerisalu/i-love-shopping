@@ -80,4 +80,10 @@ class FileStorageServiceTest {
         assertTrue(fileStorageService.productImageExists("/uploads/products/3/thumb/smart-bulb.jpg"));
         assertTrue(fileStorageService.productImageExists("/uploads/products/3/medium/smart-bulb.jpg"));
     }
+
+    @Test
+    void missingDiskFileStillResolvesClasspathSeed() throws Exception {
+        assertTrue(fileStorageService.productImageExists("/uploads/products/99/medium/nordic-arc.jpg"));
+        assertTrue(fileStorageService.loadPublicUpload("products/99/medium/nordic-arc.jpg").exists());
+    }
 }
